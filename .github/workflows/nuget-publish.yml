@@ -1,0 +1,128 @@
+name: FastDataBroker C# SDK NuGet Publish
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      publish_to_nuget:
+        description: 'Publish to NuGet after tests (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 3
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['6.0.x', '7.0.x', '8.0.x']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+        cache: true
+        cache-dependency-path: sdks/csharp/FastDataBrokerSDK.csproj
+    
+    - name: Restore NuGet packages
+      working-directory: sdks/csharp
+      run: dotnet restore
+    
+    - name: Build
+      working-directory: sdks/csharp
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Run unit tests
+      working-directory: sdks/csharp
+      run: dotnet test --configuration Release --no-build --verbosity normal
+    
+    - name: Generate code coverage
+      working-directory: sdks/csharp
+      run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" /p:CoverageOutputFormat=opencover
+      continue-on-error: true
+
+  publish-nuget:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'push' && github.ref_type == 'tag') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        cache: true
+        cache-dependency-path: sdks/csharp/FastDataBrokerSDK.csproj
+    
+    - name: Restore dependencies
+      working-directory: sdks/csharp
+      run: dotnet restore
+    
+    - name: Build Release
+      working-directory: sdks/csharp
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Pack NuGet package
+      working-directory: sdks/csharp
+      run: dotnet pack --configuration Release --output ./nupkg --no-build
+    
+    - name: Publish to NuGet
+      working-directory: sdks/csharp
+      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      if: secrets.NUGET_API_KEY != ''
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      if: github.event_name == 'push' && github.ref_type == 'tag'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: FastDataBroker C# SDK ${{ github.ref }}
+        body: |
+          ## C# SDK Release
+          
+          **Version:** ${{ github.ref }}
+          
+          ### Changes
+          - Supports .NET 6.0, 7.0, 8.0
+          - Available on NuGet: https://www.nuget.org/packages/FastDataBroker/
+          
+          ### Installation
+          ```
+          dotnet add package FastDataBroker
+          ```
+        draft: false
+        prerelease: false
+
+  nuget-validation:
+    needs: publish-nuget
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'push' && github.ref_type == 'tag') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
+
+    steps:
+    - name: Check NuGet package availability
+      run: |
+        PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}
+        echo "Checking NuGet for FastDataBroker ${PACKAGE_VERSION}..."
+        sleep 30  # Wait for NuGet to index the package
+        
+        # Try to find the package on NuGet
+        curl -s "https://api.nuget.org/v3/registration5-semver0/fastdatabroker/index.json" | grep -i "\"lower\":" || echo "Package not yet available, may take a few minutes to index"
+      continue-on-error: true

@@ -1,0 +1,182 @@
+name: FastDataBroker JavaScript SDK
+
+on: 
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      publish_to_npm:
+        description: 'Publish to npm after tests (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3
+      matrix:
+        node-version: ['16.x', '18.x', '20.x']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: sdks/javascript/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: sdks/javascript
+      run: npm ci
+    
+    - name: Build TypeScript
+      working-directory: sdks/javascript
+      run: npm run build
+    
+    - name: Lint with ESLint
+      working-directory: sdks/javascript
+      run: npm run lint
+    
+    - name: Format check with Prettier
+      working-directory: sdks/javascript
+      run: npx prettier --check src/**/*.ts
+    
+    - name: Run tests
+      working-directory: sdks/javascript
+      run: npm test -- --coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./sdks/javascript/coverage/coverage-final.json
+        flags: javascript
+        name: codecov-javascript
+        fail_ci_if_error: false
+
+  build-quality:
+    runs-on: ubuntu-latest
+    name: "✅ Code Quality Check (TypeScript Strict)"
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: sdks/javascript/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: sdks/javascript
+      run: npm ci
+    
+    - name: Build with strict TypeScript
+      working-directory: sdks/javascript
+      run: npm run build -- --strict --noImplicitAny --strictNullChecks --strictFunctionTypes
+    
+    - name: Run security audit
+      working-directory: sdks/javascript
+      run: npm audit --audit-level=moderate || true
+    
+    - name: Check for vulnerable dependencies
+      working-directory: sdks/javascript
+      run: npx snyk test --severity-threshold=high || true
+
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-quality]
+    if: startsWith(github.ref, 'refs/tags')
+    permissions:
+      contents: read
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+        cache: 'npm'
+        cache-dependency-path: sdks/javascript/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: sdks/javascript
+      run: npm ci
+    
+    - name: Build package
+      working-directory: sdks/javascript
+      run: npm run build
+    
+    - name: Run tests before publish
+      working-directory: sdks/javascript
+      run: npm test
+    
+    - name: Publish to npm
+      working-directory: sdks/javascript
+      run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Verify npm package
+      run: |
+        npm view @FastDataBroker/sdk@${{ github.ref_name }}
+        npm info @FastDataBroker/sdk
+    
+    - name: Install and test published package
+      run: |
+        mkdir /tmp/test-install
+        cd /tmp/test-install
+        npm install @FastDataBroker/sdk@${{ github.ref_name }}
+        node -e "const sdk = require('@FastDataBroker/sdk'); console.log('✅ FastDataBroker SDK successfully installed and imported!');"
+
+  publish-github-release:
+    runs-on: ubuntu-latest
+    needs: publish-to-npm
+    if: startsWith(github.ref, 'refs/tags')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: "FastDataBroker JavaScript SDK ${{ github.ref_name }}"
+        body: |
+          ## FastDataBroker JavaScript SDK ${{ github.ref_name }}
+          
+          ### Published Packages
+          - **npm**: `npm install @FastDataBroker/sdk@${{ github.ref_name }}`
+          
+          ### Installation
+          ```bash
+          npm install @FastDataBroker/sdk
+          ```
+          
+          ### Quick Start
+          ```typescript
+          import { Client, Producer } from '@FastDataBroker/sdk';
+          
+          const client = new Client({
+            bootstrapServers: ['broker1:8080', 'broker2:8081'],
+            streamName: 'orders'
+          });
+          
+          const producer = new Producer(client);
+          const partition = await producer.send('order-123', { amount: 100 });
+          console.log(`Message sent to partition ${partition}`);
+          ```
+          
+          ### Changes in This Release
+          See [GitHub Commits](https://github.com/suraj202923/FastDataBroker/commits/${{ github.ref_name }})
+        draft: false
+        prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
