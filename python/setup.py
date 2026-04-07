@@ -22,7 +22,7 @@ setup(
     name="FastDataBroker-sdk",
     version="0.4.0",
     author="FastDataBroker Team",
-    author_email="dev@FastDataBroker.local",
+    author_email="suraj202923@gmail.com",
     description="FastDataBroker SDK for Python - Advanced messaging system with multi-channel notifications",
     long_description=long_description,
     long_description_content_type="text/markdown",
