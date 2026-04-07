@@ -38,23 +38,24 @@ jobs:
       # Pack NuGet package
       - name: Pack
         working-directory: sdks/csharp
-        run: dotnet pack --configuration Release --output ../nupkg
+        run: dotnet pack --configuration Release --output ${{ github.workspace }}/nupkg
 
       # Verify package exists
       - name: Verify package
         run: |
           echo "Listing packages:"
-          ls -la nupkg/
-          COUNT=$(ls nupkg/*.nupkg 2>/dev/null | wc -l)
+          ls -la "${{ github.workspace }}/nupkg/" || true
+          COUNT=$(ls "${{ github.workspace }}/nupkg/"*.nupkg 2>/dev/null | wc -l)
+
           if [ "$COUNT" -eq 0 ]; then
             echo "❌ No package found!"
             exit 1
           fi
 
       # Publish using Trusted Publishing (OIDC auto)
-      - name: Publish to NuGet
+      - name: Publish to NuGet        
         run: |
-          for file in nupkg/*.nupkg; do
+          for file in ${{ github.workspace }}/nupkg/*.nupkg; do
             echo "Publishing $file"
             dotnet nuget push "$file" \
               --source https://api.nuget.org/v3/index.json \
