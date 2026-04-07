@@ -32,8 +32,8 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/target/release/FastDataBroker-cli /app/FastDataBroker-cli
 
-# Copy configuration templates
-COPY --chown=appuser:appuser ./config /app/config
+# Set permissions for binary
+RUN chmod +x /app/FastDataBroker-cli
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
