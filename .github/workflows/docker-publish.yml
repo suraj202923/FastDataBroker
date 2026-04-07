@@ -1,4 +1,4 @@
-name: FastDataBroker Docker Build & Publish
+name: [Docker] Image Build & Publish
 
 on:
   push:
@@ -12,6 +12,10 @@ on:
         description: 'Publish to Docker Hub (true/false)'
         required: false
         default: 'false'
+
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   REGISTRY: docker.io

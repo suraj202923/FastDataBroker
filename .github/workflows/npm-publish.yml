@@ -1,4 +1,4 @@
-name: FastDataBroker JavaScript SDK
+name: [NPM] JavaScript SDK Publish
 
 on: 
   push:
@@ -12,6 +12,10 @@ on:
         description: 'Publish to npm after tests (true/false)'
         required: false
         default: 'false'
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -104,8 +108,6 @@ jobs:
       with:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
-        cache: 'npm'
-        cache-dependency-path: sdks/javascript/package-lock.json
     
     - name: Install dependencies
       working-directory: sdks/javascript

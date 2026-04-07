@@ -1,4 +1,4 @@
-name: FastDataBroker C# SDK NuGet Publish
+name: [NuGet] C# SDK Publish
 
 on:
   push:
@@ -13,6 +13,10 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: nuget-publish-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   id-token: write
@@ -24,7 +28,7 @@ jobs:
       max-parallel: 3
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        dotnet-version: ['6.0.x', '8.0.x']
+        dotnet-version: ['8.0.x']
 
     steps:
     - uses: actions/checkout@v4
