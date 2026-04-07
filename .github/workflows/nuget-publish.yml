@@ -135,7 +135,7 @@ jobs:
         # Request OIDC token from GitHub
         TOKEN_REQUEST_URL="$ACTIONS_ID_TOKEN_REQUEST_URL&audience=nuget.org"
         OIDC_RESPONSE=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_REQUEST_URL")
-        OIDC_TOKEN=$(echo "$OIDC_RESPONSE" | jq -r '.token' 2>/dev/null)
+        OIDC_TOKEN=$(echo "$OIDC_RESPONSE" | jq -r '.value' 2>/dev/null)
         
         if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
           echo "❌ Failed to obtain OIDC token"
