@@ -97,19 +97,39 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Output directory: ${{ github.workspace }}/nupkg"
         dotnet pack --configuration Release --output "${{ github.workspace }}/nupkg" -v d
-        echo "Pack command exit code: $?"
+        PACK_EXIT_CODE=$?
+        echo "Pack command exit code: $PACK_EXIT_CODE"
+        if [ $PACK_EXIT_CODE -ne 0 ]; then
+          echo "❌ Pack failed!"
+          exit 1
+        fi
     
     - name: List packed files
       run: |
         echo "Listing nupkg directory:"
-        ls -la ${{ github.workspace }}/nupkg/
-        echo ""
-        echo "Total files:"
-        find ${{ github.workspace }}/nupkg/ -type f
+        if [ -d "${{ github.workspace }}/nupkg" ]; then
+          ls -la "${{ github.workspace }}/nupkg/"
+          echo ""
+          echo "Total files:"
+          find "${{ github.workspace }}/nupkg/" -type f | wc -l
+        else
+          echo "❌ Directory does not exist!"
+          exit 1
+        fi
     
     - name: Publish to NuGet (Trusted Publisher)
       run: |
-        for f in ${{ github.workspace }}/nupkg/*.nupkg; do
+        NUPKG_DIR="${{ github.workspace }}/nupkg"
+        NUPKG_COUNT=$(find "$NUPKG_DIR" -name "*.nupkg" -type f | wc -l)
+        echo "Found $NUPKG_COUNT .nupkg files"
+        
+        if [ $NUPKG_COUNT -eq 0 ]; then
+          echo "❌ No .nupkg files found!"
+          ls -la "$NUPKG_DIR"
+          exit 1
+        fi
+        
+        find "$NUPKG_DIR" -name "*.nupkg" -type f | while read f; do
           echo "Publishing: $f"
           dotnet nuget push "$f" --source https://api.nuget.org/v3/index.json --skip-duplicate -k ${{ secrets.GITHUB_TOKEN }}
         done
