@@ -1,17 +1,72 @@
-- name: Publish to NuGet (Trusted Publisher)
-  run: |
-    NUPKG_DIR="${{ github.workspace }}/nupkg"
-    NUPKG_COUNT=$(find "$NUPKG_DIR" -name "*.nupkg" -type f | wc -l)
-    echo "Found $NUPKG_COUNT .nupkg files"
+name: NuGet Publish (Standalone)
 
-    if [ $NUPKG_COUNT -eq 0 ]; then
-      echo "❌ No .nupkg files found!"
-      exit 1
-    fi
+on:
+  push:
+    tags:
+      - 'v*'   # trigger only on version tags like v1.0.0
+  workflow_dispatch:
 
-    find "$NUPKG_DIR" -name "*.nupkg" -type f | while read f; do
-      echo "Publishing: $f"
-      dotnet nuget push "$f" \
-        --source https://api.nuget.org/v3/index.json \
-        --skip-duplicate
-    done
+permissions:
+  contents: read
+  id-token: write   # 🔥 REQUIRED for Trusted Publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        working-directory: sdks/csharp
+        run: dotnet restore
+
+      # Build project
+      - name: Build
+        working-directory: sdks/csharp
+        run: dotnet build --configuration Release --no-restore
+
+      # Pack NuGet package
+      - name: Pack
+        working-directory: sdks/csharp
+        run: dotnet pack --configuration Release --output ../nupkg
+
+      # Verify package exists
+      - name: Verify package
+        run: |
+          echo "Listing packages:"
+          ls -la nupkg/
+          COUNT=$(ls nupkg/*.nupkg 2>/dev/null | wc -l)
+          if [ "$COUNT" -eq 0 ]; then
+            echo "❌ No package found!"
+            exit 1
+          fi
+
+      # Publish using Trusted Publishing (OIDC auto)
+      - name: Publish to NuGet
+        run: |
+          for file in nupkg/*.nupkg; do
+            echo "Publishing $file"
+            dotnet nuget push "$file" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      # Optional: Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: nupkg/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
