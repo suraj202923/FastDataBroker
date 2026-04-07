@@ -129,14 +129,21 @@ jobs:
           exit 1
         fi
         
+        # Install jq for JSON parsing
+        apt-get update -qq && apt-get install -y -qq jq > /dev/null 2>&1
+        
         # Request OIDC token from GitHub
         TOKEN_REQUEST_URL="$ACTIONS_ID_TOKEN_REQUEST_URL&audience=nuget.org"
-        OIDC_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_REQUEST_URL" | jq -r '.token')
+        OIDC_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_REQUEST_URL" | jq -r '.token' 2>/dev/null)
         
         if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
           echo "❌ Failed to obtain OIDC token"
+          echo "Debug: REQUEST_URL=$TOKEN_REQUEST_URL"
+          echo "Debug: ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:0:20}..."
           exit 1
         fi
+        
+        echo "✓ OIDC token obtained successfully"
         
         find "$NUPKG_DIR" -name "*.nupkg" -type f | while read f; do
           echo "Publishing: $f"
