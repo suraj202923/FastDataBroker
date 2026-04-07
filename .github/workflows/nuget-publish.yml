@@ -51,14 +51,18 @@ jobs:
             echo "❌ No package found!"
             exit 1
           fi
-
+      - name: Add NuGet source (v3)
+        run: |
+          dotnet nuget add source https://api.nuget.org/v3/index.json \
+            --name nuget.org \
+            --store-password-in-clear-text
       # Publish using Trusted Publishing (OIDC auto)
-      - name: Publish to NuGet        
+      - name: Publish to NuGet
         run: |
           for file in ${{ github.workspace }}/nupkg/*.nupkg; do
             echo "Publishing $file"
             dotnet nuget push "$file" \
-              --source https://api.nuget.org/v3/index.json \
+              --source "nuget.org" \
               --skip-duplicate
           done
 
