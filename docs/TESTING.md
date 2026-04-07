@@ -29,6 +29,10 @@ tests/
 │   ├── test_client.js
 │   ├── test_producer.js
 │   └── test_consumer.js
+├── csharp/            # C# SDK tests
+│   ├── FastDataBrokerSDKTests.cs
+│   ├── ClientTests.cs
+│   └── MessageTests.cs
 ├── integration/       # Cross-language tests
 │   ├── test_cluster_client.py
 │   └── test_failover_resilience.py

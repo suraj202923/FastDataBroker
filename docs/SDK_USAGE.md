@@ -1,14 +1,15 @@
 # FastDataBroker SDK Usage Guide
 
-Complete guide to using FastDataBroker SDKs in Python, Go, Java, and JavaScript.
+Complete guide to using FastDataBroker SDKs in Python, Go, Java, JavaScript, and C#.
 
 ## Overview
 
-FastDataBroker provides four official SDKs:
+FastDataBroker provides five official SDKs:
 - **Python**: `fastdatabroker_sdk` (pip install fastdatabroker-sdk)
 - **Go**: `github.com/fastdatabroker/go-sdk`
 - **Java**: `com.fastdatabroker:fastdatabroker-sdk`
 - **JavaScript**: `npm install fastdatabroker-sdk`
+- **C#**: `FastDataBroker` (NuGet - coming soon)
 
 ## Python SDK
 
@@ -357,6 +358,205 @@ async function sendBatch() {
 }
 
 sendBatch().catch(console.error);
+```
+
+## C# SDK
+
+### Installation (NuGet)
+```bash
+dotnet add package FastDataBroker
+```
+
+### Basic Usage
+
+```csharp
+using FastDataBroker;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        // Initialize client
+        using (var client = new FastDataBrokerSDK.Client("broker1", 6000))
+        {
+            // Connect
+            await client.ConnectAsync();
+            
+            // Create message
+            var message = new FastDataBrokerSDK.Message
+            {
+                SenderId = "app-1",
+                RecipientIds = new List<string> { "user-123" },
+                Subject = "Order Notification",
+                Content = System.Text.Encoding.UTF8.GetBytes("Your order is confirmed"),
+                Priority = FastDataBrokerSDK.Priority.High
+            };
+            
+            // Send message
+            var result = await client.SendMessageAsync(message);
+            Console.WriteLine($"Sent message: {result.MessageId}");
+        }
+    }
+}
+```
+
+### Async Pattern
+
+```csharp
+using FastDataBroker;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+class AsyncExample
+{
+    static async Task Main()
+    {
+        using (var client = new FastDataBrokerSDK.Client("localhost", 6000))
+        {
+            await client.ConnectAsync();
+            
+            // Send multiple messages concurrently
+            var tasks = new List<Task<FastDataBrokerSDK.DeliveryResult>>();
+            
+            for (int i = 0; i < 1000; i++)
+            {
+                var message = new FastDataBrokerSDK.Message
+                {
+                    SenderId = "system",
+                    RecipientIds = new List<string> { $"user-{i}" },
+                    Subject = $"Message {i}",
+                    Content = System.Text.Encoding.UTF8.GetBytes($"Content {i}"),
+                    Tags = new Dictionary<string, string>
+                    {
+                        { "batch", "1000" },
+                        { "index", i.ToString() }
+                    }
+                };
+                
+                tasks.Add(client.SendMessageAsync(message));
+            }
+            
+            // Wait for all
+            var results = await Task.WhenAll(tasks);
+            Console.WriteLine($"Sent {results.Length} messages");
+        }
+    }
+}
+```
+
+### WebSocket Integration
+
+```csharp
+using FastDataBroker;
+using System;
+using System.Threading.Tasks;
+
+class WebSocketExample
+{
+    static async Task Main()
+    {
+        using (var client = new FastDataBrokerSDK.Client("localhost", 6000))
+        {
+            await client.ConnectAsync();
+            
+            // Register WebSocket client
+            var clientId = Guid.NewGuid().ToString();
+            var userId = "user-123";
+            
+            bool registered = client.RegisterWebSocketClient(clientId, userId);
+            if (registered)
+            {
+                Console.WriteLine($"WebSocket client registered: {clientId}");
+            }
+            
+            // Send a message
+            var message = new FastDataBrokerSDK.Message
+            {
+                SenderId = "server",
+                RecipientIds = new System.Collections.Generic.List<string> { userId },
+                Subject = "Real-time update",
+                Content = System.Text.Encoding.UTF8.GetBytes("Live notification")
+            };
+            
+            await client.SendMessageAsync(message);
+            
+            // Later, unregister
+            client.UnregisterWebSocketClient(clientId);
+        }
+    }
+}
+```
+
+### Webhook Configuration
+
+```csharp
+using FastDataBroker;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+class WebhookExample
+{
+    static async Task Main()
+    {
+        using (var client = new FastDataBrokerSDK.Client("localhost", 6000))
+        {
+            await client.ConnectAsync();
+            
+            // Configure webhook
+            var webhookConfig = new FastDataBrokerSDK.WebhookConfig
+            {
+                Url = "https://your-domain.com/webhook",
+                Retries = 5,
+                TimeoutMs = 45000,
+                VerifySSL = true,
+                Headers = new Dictionary<string, string>
+                {
+                    { "Authorization", "Bearer your-token" },
+                    { "X-Event-Source", "fastdatabroker" }
+                }
+            };
+            
+            // Register webhook
+            bool registered = client.RegisterWebhook(
+                FastDataBrokerSDK.NotificationChannel.Webhook,
+                webhookConfig
+            );
+            
+            if (registered)
+            {
+                Console.WriteLine("Webhook registered successfully");
+            }
+        }
+    }
+}
+```
+
+### Priority Levels
+
+```csharp
+// Set different priority levels
+var criticalMessage = new FastDataBrokerSDK.Message
+{
+    SenderId = "system",
+    Priority = FastDataBrokerSDK.Priority.Critical  // 255
+};
+
+var urgentMessage = new FastDataBrokerSDK.Message
+{
+    SenderId = "system",
+    Priority = FastDataBrokerSDK.Priority.Urgent    // 200
+};
+
+var normalMessage = new FastDataBrokerSDK.Message
+{
+    SenderId = "system",
+    Priority = FastDataBrokerSDK.Priority.Normal    // 100
+};
 ```
 
 ## Common Patterns

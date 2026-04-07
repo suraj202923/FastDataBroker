@@ -204,7 +204,61 @@ node main.js
 
 ---
 
-## 📊 Key Concepts (5 minutes)
+## � C# Example
+
+```csharp
+using FastDataBroker;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+class QuickStart
+{
+    static async Task Main()
+    {
+        // Connect to cluster
+        using (var client = new FastDataBrokerSDK.Client("localhost", 8080))
+        {
+            await client.ConnectAsync();
+
+            // Send messages
+            for (int i = 0; i < 100; i++)
+            {
+                var message = new FastDataBrokerSDK.Message
+                {
+                    SenderId = "app",
+                    RecipientIds = new List<string> { "receiver" },
+                    Subject = $"Order {i:D4}",
+                    Content = System.Text.Encoding.UTF8.GetBytes(
+                        $"{{\"amount\": {i * 100.00}}}"
+                    ),
+                    Priority = FastDataBrokerSDK.Priority.Normal
+                };
+
+                var result = await client.SendMessageAsync(message);
+                Console.WriteLine($"✅ Sent order {i} → ID: {result.MessageId}");
+            }
+        }
+    }
+}
+```
+
+**Run it**:
+```bash
+dotnet add package FastDataBroker
+dotnet run
+```
+
+**Expected Output**:
+```
+✅ Sent order 0000 → ID: abc123...
+✅ Sent order 0001 → ID: def456...
+...
+```
+
+---
+
+## �📊 Key Concepts (5 minutes)
 
 ### Stream
 A named sequence of messages (like a Kafka topic). Example: `orders`, `logs`, `events`

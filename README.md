@@ -10,11 +10,11 @@
 [![Latency: 2-3ms P99](https://img.shields.io/badge/Latency-2--3ms%20P99-blue.svg?style=for-the-badge)]()
 [![Throughput: 912K/sec](https://img.shields.io/badge/Throughput-912K%2Fsec-brightgreen.svg?style=for-the-badge)]()
 [![Clustering: Built-in ✅](https://img.shields.io/badge/Clustering-Built--in%20%E2%9C%85-blueviolet.svg?style=for-the-badge)]()
-[![Languages: 4](https://img.shields.io/badge/Languages-Python%20%7C%20Go%20%7C%20Java%20%7C%20JS-orange.svg?style=for-the-badge)]()
+[![Languages: 5](https://img.shields.io/badge/Languages-Python%20%7C%20Go%20%7C%20Java%20%7C%20JS%20%7C%20C%23-orange.svg?style=for-the-badge)]()
 
 </div>
 
-High-performance, production-ready distributed message queue built with **Rust** core and SDKs for **Python**, **Go**, **Java**, **JavaScript**. Designed for low-latency, high-throughput message delivery with zero message loss guarantee.
+High-performance, production-ready distributed message queue built with **Rust** core and SDKs for **Python**, **Go**, **Java**, **JavaScript**, and **C#**. Designed for low-latency, high-throughput message delivery with zero message loss guarantee.
 
 ---
 
@@ -53,7 +53,7 @@ for msg in consumer.consume():
     print(f"✅ Received: {msg.value}")
 ```
 
-### Go / Java / JavaScript
+### Go / Java / JavaScript / C#
 📖 **See [docs/QUICKSTART.md](docs/QUICKSTART.md)** for other languages
 
 ---
@@ -88,6 +88,7 @@ for msg in consumer.consume():
 - **Go** 🐹 (High performance)
 - **Java** ☕ (Enterprise)
 - **JavaScript** 📜 (Frontend ready)
+- **C#** 💎 (.NET ecosystem)
 
 ### ☸️ Cloud Ready
 - **Kubernetes** - StatefulSet + auto-scaling
