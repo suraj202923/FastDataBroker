@@ -88,16 +88,11 @@ jobs:
       working-directory: sdks/csharp
       run: dotnet pack --configuration Release --output ./nupkg --no-build
     
-    - name: Obtain NuGet authentication token
-      run: |
-        dotnet nuget update source nuget.org --username github --store-password-in-clear-text --password ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Publish to NuGet using Trusted Publisher
+    - name: Publish to NuGet (Trusted Publisher)
       working-directory: sdks/csharp
-      run: |
-        # Use dotnet nuget login with OIDC token
-        dotnet nuget login --username __token__ --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
-        dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create GitHub Release
       uses: actions/create-release@v1

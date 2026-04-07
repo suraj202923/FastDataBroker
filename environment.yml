@@ -1,0 +1,24 @@
+name: fastdatabroker
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python (version set via setup-miniconda matrix)
+  - python
+  
+  # Build tools for Rust/maturin compilation
+  - rust
+  - maturin
+  
+  # Development tools
+  - pip
+  
+  # Optional: Testing and linting tools
+  # (these can be installed via pip if needed)
+  
+  # Optional: Jupyter for notebooks
+  # - jupyter
+  
+  # Optional: NumPy/Pandas if using numerical operations
+  # - numpy
+  # - pandas

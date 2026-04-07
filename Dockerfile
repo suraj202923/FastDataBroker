@@ -1,5 +1,5 @@
 # Multi-stage build for FastDataBroker
-FROM rust:1.75-slim as builder
+FROM rust:1.81-slim AS builder
 
 WORKDIR /app
 

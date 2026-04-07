@@ -39,9 +39,8 @@ jobs:
     - name: Install dependencies
       shell: bash -l {0}
       run: |
-        conda env update --file environment.yml --name base
-        # Additional FastDataBroker specific dependencies
-        conda install -c conda-forge rust maturin
+        # Install Rust and maturin for building Python extensions
+        conda install -c conda-forge rust maturin -y
         pip install -e python/
     
     - name: Lint with flake8
@@ -103,8 +102,8 @@ jobs:
     - name: Install dependencies
       shell: bash -l {0}
       run: |
-        conda env update --file environment.yml --name base
-        conda install -c conda-forge rust maturin
+        # Install build tools
+        conda install -c conda-forge rust maturin -y
         pip install -e python/
     
     - name: Strict lint with flake8 (Python 3.12)

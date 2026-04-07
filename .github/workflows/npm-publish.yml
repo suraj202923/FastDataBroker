@@ -32,8 +32,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: sdks/javascript/package-lock.json
     
     - name: Install dependencies
       working-directory: sdks/javascript
@@ -74,8 +72,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: sdks/javascript/package-lock.json
     
     - name: Install dependencies
       working-directory: sdks/javascript
