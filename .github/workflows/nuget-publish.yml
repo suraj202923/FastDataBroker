@@ -58,13 +58,21 @@ jobs:
         run: |
           dotnet nuget add source https://api.nuget.org/v3/index.json \
             --name nuget.org      
-      - name: Publish to NuGet (Trusted Publishing)
+      - name: Install NuGet CLI
         run: |
+          dotnet tool install -g NuGet.CommandLine
+
+      - name: Publish to NuGet (Trusted Publishing)
+        env:
+          NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED: true
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+
           for file in ${{ github.workspace }}/nupkg/*.nupkg; do
             echo "Publishing $file"
-            dotnet nuget push "$file" \
-              --skip-duplicate \
-              --no-symbols true
+            nuget push "$file" \
+              -Source "https://api.nuget.org/v3/index.json" \
+              -NonInteractive
           done
       # Optional: Create GitHub Release
       - name: Create GitHub Release
