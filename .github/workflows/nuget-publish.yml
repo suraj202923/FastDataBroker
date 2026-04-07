@@ -57,7 +57,11 @@ jobs:
       - name: Add NuGet source (v3)
         run: |
           dotnet nuget add source https://api.nuget.org/v3/index.json \
-            --name nuget.org      
+            --name nuget.org   
+      - name: Install Mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mono-devel   
       - name: Setup NuGet CLI
         uses: NuGet/setup-nuget@v2
 
