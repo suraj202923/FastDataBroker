@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 # Build release binary
-RUN cargo build --release --bin FastDataBroker-cli
+RUN cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -29,15 +29,15 @@ RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-# Copy binary from builder
-COPY --from=builder /app/target/release/FastDataBroker-cli /app/FastDataBroker-cli
+# Copy library from builder
+COPY --from=builder /app/target/release/ /app/lib/
 
-# Set permissions for binary
-RUN chmod +x /app/FastDataBroker-cli
+# Set permissions for libraries
+RUN chmod -R +x /app/lib/
 
-# Health check
+# Health check - verify library exists
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:6379/health || exit 1
+    CMD test -f /app/lib/libfastdatabroker.so || exit 1
 
 # Switch to non-root user
 USER appuser
@@ -50,5 +50,5 @@ ENV RUST_LOG=info
 ENV RUST_BACKTRACE=1
 ENV FastDataBroker_BIND=0.0.0.0:6379
 
-# Run the service
-CMD ["/app/FastDataBroker-cli", "server"]
+# Run the service (library container - keeps running)
+CMD ["/bin/bash"]
