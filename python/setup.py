@@ -32,8 +32,8 @@ setup(
         "Bug Tracker": "https://github.com/suraj202923/rst_queue_FastDataBroker/issues",
         "Source Code": "https://github.com/suraj202923/rst_queue_FastDataBroker",
     },
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
+    py_modules=["fastdatabroker_sdk"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
