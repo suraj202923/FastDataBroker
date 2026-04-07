@@ -129,9 +129,18 @@ jobs:
           exit 1
         fi
         
+        # Request OIDC token from GitHub
+        TOKEN_REQUEST_URL="$ACTIONS_ID_TOKEN_REQUEST_URL&audience=nuget.org"
+        OIDC_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_REQUEST_URL" | jq -r '.token')
+        
+        if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
+          echo "❌ Failed to obtain OIDC token"
+          exit 1
+        fi
+        
         find "$NUPKG_DIR" -name "*.nupkg" -type f | while read f; do
           echo "Publishing: $f"
-          dotnet nuget push "$f" --source https://api.nuget.org/v3/index.json --skip-duplicate -k ${{ secrets.GITHUB_TOKEN }}
+          dotnet nuget push "$f" --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key "$OIDC_TOKEN"
         done
     
     - name: Create GitHub Release

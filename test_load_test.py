@@ -437,7 +437,7 @@ class ConsumerLagScenario(LoadTestScenario):
             "messages_consumed": consumed,
             "final_lag": produced - consumed,
             "max_lag": max_lag,
-            "avg_lag": sum(lats) / len(lags) if lags else 0,
+            "avg_lag": sum(lags) / len(lags) if lags else 0,
             "consumer_catchup_time": "N/A" if produced > consumed else "immediate",
         }
         
