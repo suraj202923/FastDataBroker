@@ -1,4 +1,4 @@
-name: [NPM] JavaScript SDK Publish
+name: "[NPM] JavaScript SDK Publish"
 
 on: 
   push:

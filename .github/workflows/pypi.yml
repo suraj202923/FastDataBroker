@@ -1,4 +1,4 @@
-name: [PyPI] Python SDK Publish
+name: "[PyPI] Python SDK Publish"
 
 on: 
   push:

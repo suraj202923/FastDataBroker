@@ -1,4 +1,4 @@
-name: [NuGet] C# SDK Publish
+name: "[NuGet] C# SDK Publish"
 
 on:
   push:
