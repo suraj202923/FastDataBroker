@@ -1,0 +1,13 @@
+src/
+tests/
+coverage/
+*.test.ts
+*.spec.ts
+.eslintrc.json
+.prettierrc.json
+jest.config.js
+tsconfig.json
+node_modules/
+.git/
+.github/
+*.md

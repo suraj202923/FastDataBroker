@@ -84,12 +84,28 @@ jobs:
       working-directory: sdks/csharp
       run: dotnet build --configuration Release --no-restore
     
+    - name: Verify build output
+      working-directory: sdks/csharp
+      run: ls -la bin/Release/
+    
+    - name: Create output directory
+      run: mkdir -p ${{ github.workspace }}/nupkg
+    
     - name: Pack NuGet package
       working-directory: sdks/csharp
-      run: dotnet pack --configuration Release --output ${{ github.workspace }}/nupkg --no-build
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Output directory: ${{ github.workspace }}/nupkg"
+        dotnet pack --configuration Release --output "${{ github.workspace }}/nupkg" -v d
+        echo "Pack command exit code: $?"
     
     - name: List packed files
-      run: ls -la ${{ github.workspace }}/nupkg/
+      run: |
+        echo "Listing nupkg directory:"
+        ls -la ${{ github.workspace }}/nupkg/
+        echo ""
+        echo "Total files:"
+        find ${{ github.workspace }}/nupkg/ -type f
     
     - name: Publish to NuGet (Trusted Publisher)
       run: dotnet nuget push "${{ github.workspace }}/nupkg/*.nupkg" --source https://api.nuget.org/v3/index.json

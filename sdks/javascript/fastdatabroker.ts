@@ -128,7 +128,7 @@ export class FastDataBrokerClient {
    * console.log(`Message delivered via ${result.deliveredChannels} channels`);
    * ```
    */
-  async sendMessage(message: Message): Promise<DeliveryResult> {
+  async sendMessage(_message: Message): Promise<DeliveryResult> {
     if (!this.connected) {
       throw new Error("Not connected to FastDataBroker");
     }
@@ -197,7 +197,7 @@ export class FastDataBrokerClient {
   /**
    * Unregister a webhook endpoint
    */
-  async unregisterWebhook(recipientId: string): Promise<boolean> {
+  async unregisterWebhook(_recipientId: string): Promise<boolean> {
     // Phase 4: Unregister from broker
     return true;
   }
@@ -325,9 +325,6 @@ export class EmailBuilder {
     };
   }
 }
-
-// Export types and enums
-export * from "./types";
 
 // Usage examples (commented out)
 /*
