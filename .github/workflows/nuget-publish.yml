@@ -1,4 +1,5 @@
 name: NuGet Publish (Multi-OS)
+
 on:
   push:
     tags:
@@ -7,7 +8,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write   # 🔥 REQUIRED for Trusted Publishing
+  id-token: write   # This MUST be here for OIDC to work
 
 jobs:
   build-and-publish:
@@ -26,32 +27,18 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        working-directory: sdks/csharp
-        run: dotnet restore
-
-      - name: Build
-        working-directory: sdks/csharp
-        run: dotnet build --configuration Release --no-restore
+      - name: Restore and Build
+        run: |
+          dotnet restore sdks/csharp/
+          dotnet build sdks/csharp/ --configuration Release --no-restore
 
       - name: Pack
-        working-directory: sdks/csharp
-        run: dotnet pack --configuration Release --output ${{ github.workspace }}/nupkg
+        run: dotnet pack sdks/csharp/ --configuration Release --output ./nupkg
 
-      # --- PUBLISH LOGIC ---
-      # We only want to push to NuGet once, so we pick the Linux runner to do the honors.
       - name: Publish to NuGet
+        # We only push from Linux to avoid multiple uploads
         if: matrix.os == 'ubuntu-latest'
         run: |
-          dotnet nuget push "${{ github.workspace }}/nupkg/*.nupkg" \
+          dotnet nuget push "./nupkg/*.nupkg" \
             --source "https://api.nuget.org/v3/index.json" \
             --skip-duplicate
-
-      # Create GitHub Release (Only on Tags and from the Linux runner)
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/')
-        with:
-          files: nupkg/*.nupkg
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
