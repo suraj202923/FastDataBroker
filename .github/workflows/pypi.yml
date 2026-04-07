@@ -53,6 +53,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
     - name: Type checking with mypy
+      shell: bash
       run: |
         pip install mypy
         if [ "${{ matrix.python-version }}" == "3.12" ]; then
@@ -64,6 +65,7 @@ jobs:
         fi
     
     - name: Test with pytest
+      shell: bash
       run: |
         pip install pytest pytest-cov pytest-asyncio
         if [ "${{ matrix.python-version }}" == "3.12" ]; then
