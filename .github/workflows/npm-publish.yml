@@ -35,7 +35,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: sdks/javascript
-      run: npm ci
+      run: npm install
     
     - name: Build TypeScript
       working-directory: sdks/javascript
@@ -75,7 +75,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: sdks/javascript
-      run: npm ci
+      run: npm install
     
     - name: Build with strict TypeScript
       working-directory: sdks/javascript
@@ -107,7 +107,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: sdks/javascript
-      run: npm ci
+      run: npm install
     
     - name: Build package
       working-directory: sdks/javascript

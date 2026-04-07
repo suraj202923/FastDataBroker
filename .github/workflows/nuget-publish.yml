@@ -86,11 +86,13 @@ jobs:
     
     - name: Pack NuGet package
       working-directory: sdks/csharp
-      run: dotnet pack --configuration Release --output ./nupkg --no-build
+      run: dotnet pack --configuration Release --output ${{ github.workspace }}/nupkg --no-build
+    
+    - name: List packed files
+      run: ls -la ${{ github.workspace }}/nupkg/
     
     - name: Publish to NuGet (Trusted Publisher)
-      working-directory: sdks/csharp
-      run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push "${{ github.workspace }}/nupkg/*.nupkg" --source https://api.nuget.org/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
