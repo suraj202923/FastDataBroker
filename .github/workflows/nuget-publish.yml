@@ -8,12 +8,14 @@ on:
 
 permissions:
   contents: write
-  id-token: write   # This MUST be here for OIDC to work
+  id-token: write   # 🔥 REQUIRED: This is what generates the OIDC token
 
 jobs:
   build-and-publish:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # If you defined an Environment in NuGet.org (e.g., "release"), uncomment below:
+    # environment: release 
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -36,9 +38,9 @@ jobs:
         run: dotnet pack sdks/csharp/ --configuration Release --output ./nupkg
 
       - name: Publish to NuGet
-        # We only push from Linux to avoid multiple uploads
         if: matrix.os == 'ubuntu-latest'
         run: |
           dotnet nuget push "./nupkg/*.nupkg" \
             --source "https://api.nuget.org/v3/index.json" \
-            --skip-duplicate
+            --skip-duplicate \
+            --no-symbols true
