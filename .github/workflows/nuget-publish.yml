@@ -13,6 +13,10 @@ on:
         required: false
         default: 'false'
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
@@ -80,10 +84,16 @@ jobs:
       working-directory: sdks/csharp
       run: dotnet pack --configuration Release --output ./nupkg --no-build
     
-    - name: Publish to NuGet
+    - name: Obtain NuGet authentication token
+      run: |
+        dotnet nuget update source nuget.org --username github --store-password-in-clear-text --password ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Publish to NuGet using Trusted Publisher
       working-directory: sdks/csharp
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      if: secrets.NUGET_API_KEY != ''
+      run: |
+        # Use dotnet nuget login with OIDC token
+        dotnet nuget login --username __token__ --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+        dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
     
     - name: Create GitHub Release
       uses: actions/create-release@v1
