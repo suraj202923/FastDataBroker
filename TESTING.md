@@ -162,7 +162,7 @@ def test_send_and_consume():
 pytest tests/python/ -v
 
 # With coverage
-pytest tests/python/ --cov=postoffice_sdk
+pytest tests/python/ --cov=fastdatabroker_sdk
 
 # Specific test
 pytest tests/python/test_producer.py::test_send_basic -v
@@ -440,7 +440,7 @@ Status:                          PRODUCTION READY ✅
 
 ```python
 import pytest
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 class TestMyFeature:
     @pytest.fixture
@@ -611,7 +611,7 @@ python tests/performance/load_test.py --duration 300 --max-throughput
 1. **Check environment**
    ```bash
    docker ps  # Brokers running?
-   python -c "from postoffice_sdk import ClusterClient; Client(['localhost:8080'])"
+   python -c "from fastdatabroker_sdk import ClusterClient; Client(['localhost:8080'])"
    ```
 
 2. **Check logs**

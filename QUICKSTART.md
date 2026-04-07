@@ -27,7 +27,7 @@ cd terraform && terraform apply
 ## 🐍 Python Example
 
 ```python
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 # Initialize cluster
 client = ClusterClient([
@@ -53,7 +53,7 @@ for msg in consumer.consume(timeout_ms=30000):
 
 **Run it**:
 ```bash
-pip install postoffice-sdk
+pip install fastdatabroker-sdk
 python example.py
 ```
 

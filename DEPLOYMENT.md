@@ -48,7 +48,7 @@ Services:
 ### Testing Locally
 
 ```python
-from postoffice_sdk import ClusterClient, Producer, Consumer
+from fastdatabroker_sdk import ClusterClient, Producer, Consumer
 
 # Easy localhost test
 client = ClusterClient([
@@ -536,7 +536,7 @@ curl http://localhost:8080/health
 
 # Check offsets
 python -c "
-from postoffice_sdk import Consumer, ClusterClient
+from fastdatabroker_sdk import Consumer, ClusterClient
 client = ClusterClient(['localhost:8080'])
 consumer = Consumer(client, 'debug-group')
 print(consumer.get_offset())
@@ -544,7 +544,7 @@ print(consumer.get_offset())
 
 # Check messages exist
 python -c "
-from postoffice_sdk import Producer, ClusterClient
+from fastdatabroker_sdk import Producer, ClusterClient
 client = ClusterClient(['localhost:8080'])
 producer = Producer(client)
 producer.send(b'test', b'test_message')

@@ -9,6 +9,7 @@
 [![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg?style=for-the-badge)]()
 [![Latency: 2-3ms P99](https://img.shields.io/badge/Latency-2--3ms%20P99-blue.svg?style=for-the-badge)]()
 [![Throughput: 912K/sec](https://img.shields.io/badge/Throughput-912K%2Fsec-brightgreen.svg?style=for-the-badge)]()
+[![Clustering: Built-in ✅](https://img.shields.io/badge/Clustering-Built--in%20%E2%9C%85-blueviolet.svg?style=for-the-badge)]()
 [![Languages: 4](https://img.shields.io/badge/Languages-Python%20%7C%20Go%20%7C%20Java%20%7C%20JS-orange.svg?style=for-the-badge)]()
 
 </div>
@@ -36,7 +37,7 @@ High-performance, production-ready distributed message queue built with **Rust**
 
 ### Python
 ```python
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 # Setup
 client = ClusterClient(['broker1:8080', 'broker2:8081', 'broker3:8082', 'broker4:8083'])
@@ -69,10 +70,18 @@ for msg in consumer.consume():
 - **4-11x cheaper** than Kafka/RabbitMQ
 - **Run on t3.large** - No special hardware needed
 
-### 🛡️ Enterprise Grade
-- **3-way replication** - Zero message loss
+### � Built-in Clustering (No Extra Configuration!)
+- **Multi-broker clusters out-of-the-box** - 4-node recommended
+- **3-way replication** - Zero message loss guarantee
 - **Automatic failover** - <5 seconds recovery
-- **Tolerate 1 failure** - In 4-node cluster
+- **Tolerate 1 broker failure** - With 4 nodes
+- **100% linear scaling** - 4 brokers = 3.6M msg/sec
+
+### 🛡️ Enterprise Grade
+- **Zero message loss** - 3-way replication
+- **Quorum-based writes** - Strong consistency
+- **Ordered delivery** - Per partition guaranteed
+- **Consumer groups** - Automatic load balancing
 
 ### 🌐 Multi-Language
 - **Python** 🐍 (Full featured)
@@ -193,7 +202,7 @@ Used in production for:
 ### 60-Second Python Example
 
 ```python
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 # Initialize client with 4 brokers
 client = ClusterClient(
@@ -332,7 +341,7 @@ See [docs/TESTING.md](docs/TESTING.md) for complete test documentation.
 
 ### Python SDK
 ```python
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 client = ClusterClient(['broker1:8080', 'broker2:8081'])
 producer = Producer(client)
@@ -479,7 +488,7 @@ FastDataBroker/
 ### For Backend Developers
 1. Read: [SDK Usage](docs/SDK_USAGE.md) for your language
 2. Clone repo: `git clone <url>`
-3. Install SDK: `pip install postoffice-sdk` (Python)
+3. Install SDK: `pip install fastdatabroker-sdk` (Python)
 4. Run example from SDK docs
 
 ### For DevOps/SRE

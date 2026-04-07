@@ -5,7 +5,7 @@ Complete guide to using FastDataBroker SDKs in Python, Go, Java, and JavaScript.
 ## Overview
 
 FastDataBroker provides four official SDKs:
-- **Python**: `postoffice_sdk` (pip install postoffice-sdk)
+- **Python**: `fastdatabroker_sdk` (pip install fastdatabroker-sdk)
 - **Go**: `github.com/fastdatabroker/go-sdk`
 - **Java**: `com.fastdatabroker:fastdatabroker-sdk`
 - **JavaScript**: `npm install fastdatabroker-sdk`
@@ -14,13 +14,13 @@ FastDataBroker provides four official SDKs:
 
 ### Installation
 ```bash
-pip install postoffice-sdk
+pip install fastdatabroker-sdk
 ```
 
 ### Basic Usage
 
 ```python
-from postoffice_sdk import Producer, Consumer, ClusterClient
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
 
 # Initialize client
 client = ClusterClient(
@@ -58,7 +58,7 @@ for offset, message in consumer.consume_partition(partition=0, start_offset=0):
 
 ```python
 import asyncio
-from postoffice_sdk import AsyncProducer, AsyncConsumer
+from fastdatabroker_sdk import AsyncProducer, AsyncConsumer
 
 async def main():
     client = ClusterClient(bootstrap_servers=['broker1:8080'])
@@ -90,7 +90,7 @@ asyncio.run(main())
 ### Batch Operations
 
 ```python
-from postoffice_sdk import BatchProducer
+from fastdatabroker_sdk import BatchProducer
 
 producer = BatchProducer(
     client,
@@ -364,7 +364,7 @@ sendBatch().catch(console.error);
 ### Request-Reply Pattern
 
 ```python
-from postoffice_sdk import Producer, Consumer
+from fastdatabroker_sdk import Producer, Consumer
 import uuid
 
 def send_request(client, request_data):
