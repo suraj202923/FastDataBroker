@@ -181,17 +181,17 @@ class TestRunner:
         # SDK tests (if available)
         try:
             self.results.append(self.run_go_tests())
-        except:
+        except Exception:
             pass
         
         try:
             self.results.append(self.run_java_tests())
-        except:
+        except Exception:
             pass
         
         try:
             self.results.append(self.run_javascript_tests())
-        except:
+        except Exception:
             pass
         
         # Performance tests

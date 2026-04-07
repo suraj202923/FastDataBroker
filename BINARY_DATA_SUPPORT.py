@@ -143,7 +143,7 @@ class BinaryDataExample:
                 f.write(binary_data)
             
             print(f"[DECODE] ✓ File saved: {output_path}")
-        except:
+        except Exception:
             print(f"[DECODE] File saved (simulated): {output_path}")
         
         return binary_data
