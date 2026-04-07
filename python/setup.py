@@ -3,9 +3,20 @@ FastDataBroker Python SDK setup configuration
 """
 
 from setuptools import setup, find_packages
+import os
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+# Try to read README from multiple locations
+readme_path = None
+for path in ["README.md", "../README.md", "../../README.md"]:
+    if os.path.exists(path):
+        readme_path = path
+        break
+
+if readme_path:
+    with open(readme_path, "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+else:
+    long_description = "FastDataBroker SDK for Python - Advanced messaging system with multi-channel notifications"
 
 setup(
     name="FastDataBroker-sdk",

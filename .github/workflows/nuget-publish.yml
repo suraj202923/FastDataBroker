@@ -108,9 +108,11 @@ jobs:
         find ${{ github.workspace }}/nupkg/ -type f
     
     - name: Publish to NuGet (Trusted Publisher)
-      run: dotnet nuget push "${{ github.workspace }}/nupkg/*.nupkg" --source https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        for f in ${{ github.workspace }}/nupkg/*.nupkg; do
+          echo "Publishing: $f"
+          dotnet nuget push "$f" --source https://api.nuget.org/v3/index.json --skip-duplicate -k ${{ secrets.GITHUB_TOKEN }}
+        done
     
     - name: Create GitHub Release
       uses: actions/create-release@v1
