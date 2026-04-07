@@ -1,0 +1,43 @@
+// QUIC Server Example - Phase 1
+//
+// Demonstrates basic QUIC server functionality
+
+use rst_queue_postoffice::transport::{QuicServer, QuicServerConfig};
+use tracing_subscriber;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    // Configure the QUIC server
+    let config = QuicServerConfig {
+        listen_addr: "127.0.0.1:4433".parse()?,
+        cert_path: "./certs/cert.pem".to_string(),
+        key_path: "./certs/key.pem".to_string(),
+        max_connections: 10000,
+        max_streams: 1000000,
+        idle_timeout_ms: 30000,
+        max_data: 10_000_000,
+    };
+
+    println!("🚀 Post Office QUIC Server - Phase 1");
+    println!("====================================\n");
+
+    // Create server
+    let mut server = QuicServer::new(config.clone());
+
+    // Start the server
+    println!("📡 Starting QUIC server...");
+    println!("Address: {}", config.listen_addr);
+    println!("Certificates: {}, {}", config.cert_path, config.key_path);
+    println!("\n⚠️  Note: You need to generate certificates first!");
+    println!("    Run: openssl req -x509 -newkey rsa:2048 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj \"/C=US/ST=State/L=City/O=Org/CN=localhost\"\n");
+
+    // Start server (this will block)
+    server.start().await?;
+
+    Ok(())
+}

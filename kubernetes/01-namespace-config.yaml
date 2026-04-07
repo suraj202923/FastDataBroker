@@ -1,0 +1,89 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: FastDataBroker
+  labels:
+    name: FastDataBroker
+
+---
+# ConfigMap for FastDataBroker configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: FastDataBroker-config
+  namespace: FastDataBroker
+data:
+  logging.level: "info"
+  logging.format: "json"
+  tracing.enabled: "true"
+  tracing.jaeger_host: "jaeger-collector.observability.svc.cluster.local"
+  tracing.jaeger_port: "6831"
+  encryption.enabled: "true"
+  multi_region.enabled: "true"
+  metrics.enabled: "true"
+  circuit_breaker.failure_threshold: "50"
+  circuit_breaker.success_threshold: "90"
+  circuit_breaker.timeout_secs: "60"
+  retry.max_attempts: "3"
+  retry.backoff_ms: "100"
+  retry.max_delay_secs: "30"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: FastDataBroker-secrets
+  namespace: FastDataBroker
+type: Opaque
+stringData:
+  db_password: "change-me-in-production"
+  encryption_key: "generated-at-deployment-time"
+  api_key: "production-api-key"
+
+---
+# PersistentVolume for message storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: FastDataBroker-pv-data
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: fast-ssd
+  hostPath:
+    path: /data/FastDataBroker
+    type: DirectoryOrCreate
+
+---
+# PersistentVolumeClaim for FastDataBroker data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: FastDataBroker-data
+  namespace: FastDataBroker
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+# StorageClass for high-performance SSD
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+provisioner: kubernetes.io/no-provisioner
+allowVolumeExpansion: true
+parameters:
+  type: ssd
+  iops: "3000"
+  throughput: "125"

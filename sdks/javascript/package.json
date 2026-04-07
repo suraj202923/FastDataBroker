@@ -1,0 +1,49 @@
+{
+  "name": "@FastDataBroker/sdk",
+  "version": "0.4.0",
+  "description": "FastDataBroker JavaScript/TypeScript SDK for messaging and notifications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "docs": "typedoc src",
+    "prepublishOnly": "npm run build && npm run test"
+  },
+  "keywords": [
+    "FastDataBroker",
+    "messaging",
+    "notifications",
+    "email",
+    "websocket",
+    "push",
+    "webhook",
+    "async",
+    "quic"
+  ],
+  "author": "FastDataBroker Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/suraj202923/rst_queue_FastDataBroker.git",
+    "directory": "sdks/javascript"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0",
+    "typedoc": "^0.24.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

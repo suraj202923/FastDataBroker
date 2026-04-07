@@ -1,0 +1,150 @@
+---
+# ServiceAccount for FastDataBroker
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: FastDataBroker
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+
+---
+# ClusterRole for FastDataBroker (read-only operations)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: FastDataBroker-reader
+  labels:
+    app: FastDataBroker
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "list", "watch"]
+
+---
+# Role for FastDataBroker (namespace-specific)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: FastDataBroker
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["leases"]
+    verbs: ["get", "create", "update", "list"]
+
+---
+# RoleBinding for FastDataBroker namespace role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: FastDataBroker
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: FastDataBroker
+subjects:
+  - kind: ServiceAccount
+    name: FastDataBroker
+    namespace: FastDataBroker
+
+---
+# ClusterRoleBinding for read-only cluster access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: FastDataBroker-reader
+  labels:
+    app: FastDataBroker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: FastDataBroker-reader
+subjects:
+  - kind: ServiceAccount
+    name: FastDataBroker
+    namespace: FastDataBroker
+
+---
+# NetworkPolicy for egress to services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: FastDataBroker-network-policy
+  namespace: FastDataBroker
+spec:
+  podSelector:
+    matchLabels:
+      app: FastDataBroker
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from any source
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 6379
+        - protocol: TCP
+          port: 6380
+        - protocol: TCP
+          port: 6381
+  egress:
+    # Allow to any destination (DNS, external services)
+    - to:
+        - namespaceSelector: {}
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow to Jaeger for tracing
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: observability
+      ports:
+        - protocol: TCP
+          port: 6831
+        - protocol: TCP
+          port: 16686
+
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: FastDataBroker-pdb
+  namespace: FastDataBroker
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: FastDataBroker

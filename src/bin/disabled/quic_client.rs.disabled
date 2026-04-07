@@ -1,0 +1,165 @@
+// QUIC Client Example - Phase 1
+//
+// Simple client to test QUIC server connectivity
+
+use anyhow::{anyhow, Result};
+use quinn::{ClientConfig, Endpoint, TransportConfig};
+use rustls::pki_types::ServerName;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use tracing_subscriber;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    println!("🚀 Post Office QUIC Client - Phase 1");
+    println!("===================================\n");
+
+    let server_addr: SocketAddr = "127.0.0.1:4433".parse()?;
+    let server_name = "localhost";
+
+    println!("📡 Connecting to QUIC server at {}...", server_addr);
+
+    // Create a client configuration that doesn't verify certificates (for testing)
+    let mut roots = rustls::RootCertStore::empty();
+    // For testing, we'll accept any certificate
+    let config = ClientConfig::builder()
+        .dangerous()
+        .with_custom_certificate_verifier(Arc::new(NoCertificateVerification))
+        .with_no_client_auth();
+
+    let mut transport = TransportConfig::default();
+    transport.max_idle_timeout(Some(
+        quinn::IdleTimeout::try_from(std::time::Duration::from_secs(30)).unwrap(),
+    ));
+
+    let mut config = config;
+    config.transport_config(Arc::new(transport));
+
+    // Create QUIC endpoint
+    let endpoint = Endpoint::new_with_abstract_socket(
+        Default::default(),
+        None,
+        std::net::UdpSocket::bind("127.0.0.1:0")?,
+        Arc::new(quinn::TokioRuntime),
+    )?;
+
+    println!("✅ QUIC endpoint created");
+
+    // Connect to server
+    match endpoint.connect(server_addr, server_name) {
+        Some(connecting) => {
+            println!("🔗 Connecting to server...");
+
+            match connecting.await {
+                Ok(connection) => {
+                    println!("✅ Connected to server!");
+                    println!("📊 Local address: {}", connection.local_ip());
+                    println!("📊 Remote address: {}", connection.remote_address());
+
+                    // Open a bidirectional stream
+                    match connection.open_bi().await {
+                        Ok((mut send, mut recv)) => {
+                            println!("\n📤 Sending test message...");
+
+                            // Send a test message
+                            let message = b"Hello from QUIC client!";
+                            send.write_all(message).await?;
+                            send.finish().await?;
+
+                            println!("✅ Message sent: {}", String::from_utf8_lossy(message));
+
+                            // Receive response
+                            println!("\n📥 Waiting for response...");
+                            if let Ok(Some(data)) = recv.read_chunk(1024, false).await {
+                                let response = String::from_utf8_lossy(&data);
+                                println!("✅ Response received: {}", response);
+                            } else {
+                                println!("⚠️  No response received");
+                            }
+
+                            // Send multiple messages for testing
+                            println!("\n🔄 Sending 5 test messages...");
+                            for i in 1..=5 {
+                                match connection.open_bi().await {
+                                    Ok((mut send, mut recv)) => {
+                                        let msg = format!("Message {}", i);
+                                        send.write_all(msg.as_bytes()).await?;
+                                        send.finish().await?;
+
+                                        if let Ok(Some(data)) = recv.read_chunk(1024, false).await {
+                                            println!("✅ Message {}: sent and got response", i);
+                                        }
+                                    }
+                                    Err(e) => println!("❌ Error opening stream: {}", e),
+                                }
+                            }
+
+                            println!("\n✅ Test completed successfully!");
+                        }
+                        Err(e) => {
+                            println!("❌ Failed to open stream: {}", e);
+                        }
+                    }
+
+                    // Close connection
+                    connection.close(0u32.into(), b"done");
+                }
+                Err(e) => {
+                    println!("❌ Connection failed: {}", e);
+                }
+            }
+        }
+        None => {
+            println!("❌ Failed to create connecting handle");
+        }
+    }
+
+    Ok(())
+}
+
+/// Custom certificate verifier that accepts all certificates (for testing only!)
+struct NoCertificateVerification;
+
+impl rustls::client::danger::ServerCertVerifier for NoCertificateVerification {
+    fn verify_server_cert(
+        &self,
+        _end_entity: &rustls::pki_types::CertificateDer<'_>,
+        _intermediates: &[rustls::pki_types::CertificateDer<'_>],
+        _server_name: &ServerName<'_>,
+        _ocsp_response: &[u8],
+        _now: rustls::pki_types::UnixTime,
+    ) -> std::result::Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
+        Ok(rustls::client::danger::ServerCertVerified::assertion())
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        _message: &[u8],
+        _cert: &rustls::pki_types::CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        _message: &[u8],
+        _cert: &rustls::pki_types::CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        vec![
+            rustls::SignatureScheme::RSA_PKCS1_SHA256,
+            rustls::SignatureScheme::ECDSA_NISTP256_SHA256,
+            rustls::SignatureScheme::ED25519,
+        ]
+    }
+}

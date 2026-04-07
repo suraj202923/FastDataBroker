@@ -1,0 +1,406 @@
+"""
+FastDataBroker Live Stream API - Quick Reference Guide
+======================================================
+
+This guide provides quick code snippets for using the new live streaming API
+integrated with FastDataBroker.
+"""
+
+# ============================================================================
+# QUICK START EXAMPLES
+# ============================================================================
+
+print("""
+╔════════════════════════════════════════════════════════════════════════════╗
+║           FastDataBroker Live Stream API - Quick Reference                 ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. BASIC SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+from LIVE_STREAM_INTEGRATION import FastDataBrokerClientWithLive
+
+# Initialize client with both messaging and streaming
+client = FastDataBrokerClientWithLive()
+client.connect()
+
+# Create a live stream
+order_stream = client.create_live_stream("order-updates")
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. PUBLISH TO LIVE STREAM (Text)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Simple text data
+event_id = client.publish_to_stream(
+    stream_id="order-updates",
+    data="Order #123 confirmed",
+    tags={
+        "order_id": "123",
+        "status": "confirmed",
+        "priority": "high"
+    }
+)
+print(f"Published: {event_id}")
+
+# Multiple updates
+for status in ["pending", "processing", "shipped"]:
+    client.publish_to_stream(
+        "order-updates",
+        f"Status changed to {status}",
+        tags={"order_id": "123", "status": status}
+    )
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. PUBLISH JSON DATA (Structured)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Publish structured JSON data
+client.publish_json_to_stream(
+    stream_id="system-metrics",
+    json_data={
+        "timestamp": 1234567890,
+        "cpu_usage": 45.2,
+        "memory_mb": 2048,
+        "disk_usage": 75.5,
+        "network_io": {"in": 1024, "out": 2048}
+    },
+    tags={"service": "api-server", "region": "us-east-1"}
+)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. SUBSCRIBE TO STREAM (Sync)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Subscribe to a stream
+consumer = client.subscribe_to_stream(
+    stream_id="order-updates",
+    tags_filter={"status": "shipped"}  # Optional filter
+)
+
+# Read single event with timeout
+event = consumer.get_event(timeout_sec=5.0)
+if event:
+    print(f"Received: {event.data}")
+    print(f"Tags: {event.tags}")
+
+# Read multiple events
+events = consumer.get_events(count=10, timeout_sec=5.0)
+for event in events:
+    print(f"{event.event_id}: {event.data}")
+
+consumer.disconnect()
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. SUBSCRIBE TO STREAM (Async)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import asyncio
+from LIVE_STREAM_INTEGRATION import FastDataBrokerAsyncClientWithLive
+
+async def listen_to_stream():
+    client = FastDataBrokerAsyncClientWithLive()
+    await client.connect()
+    
+    # Subscribe with filter
+    consumer = client.subscribe_to_stream_async(
+        stream_id="order-updates",
+        tags_filter={"priority": "high"}
+    )
+    await consumer.connect()
+    
+    # Stream events continuously
+    async for event in consumer.stream():
+        print(f"Event: {event.data}")
+        print(f"Timestamp: {event.timestamp}")
+    
+    await consumer.disconnect()
+    await client.disconnect()
+
+# Run async function
+asyncio.run(listen_to_stream())
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. STREAM STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Get stats for specific stream
+stats = client.get_stream_stats("order-updates")
+print(f"Total events: {stats['total_events']}")
+print(f"Subscribers: {stats['subscribers']}")
+print(f"Buffered: {stats['buffered_events']}")
+
+# Get stats for all streams
+all_stats = client.get_stream_stats()
+for stream_id, stats in all_stats.items():
+    print(f"{stream_id}: {stats['total_events']} events")
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. STREAM TYPES (for different use cases)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+from LIVE_STREAM_API import StreamType
+
+# LOG Stream - for application logs
+log_stream = client.create_live_stream("app-logs", StreamType.LOG)
+log_stream.put("Application started successfully")
+
+# METRICS Stream - for performance data
+metrics_stream = client.create_live_stream("perf-metrics", StreamType.METRICS)
+metrics_stream.put_json({"response_time": 45, "throughput": 1200})
+
+# ANALYTICS Stream - for user analytics
+analytics_stream = client.create_live_stream("user-analytics", StreamType.ANALYTICS)
+analytics_stream.put("User clicked product page", tags={"user": "123"})
+
+# NOTIFICATIONS Stream - for real-time alerts
+notify_stream = client.create_live_stream("alerts", StreamType.NOTIFICATIONS)
+notify_stream.put("Order shipped!", tags={"severity": "info"})
+
+# CUSTOM Stream - for your own data
+custom_stream = client.create_live_stream("my-data", StreamType.CUSTOM)
+custom_stream.put("Custom data here")
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. TAG-BASED FILTERING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Publish with multiple tags
+client.publish_to_stream(
+    "orders",
+    "Order processed",
+    tags={
+        "order_id": "ORD-123",
+        "user_id": "USER-456",
+        "status": "completed",
+        "priority": "high",
+        "region": "us-east-1"
+    }
+)
+
+# Subscribe with tag filter (AND logic - all tags must match)
+consumer = client.subscribe_to_stream(
+    "orders",
+    tags_filter={
+        "priority": "high",      # AND
+        "region": "us-east-1"    # AND
+    }
+)
+
+# This stream will only receive events with BOTH:
+# priority="high" AND region="us-east-1"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+9. REAL-WORLD EXAMPLE: Real-time Order Dashboard
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Server-side: Publish order updates
+def process_order(order_id, user_id):
+    client.publish_to_stream(
+        "order-stream",
+        f"Processing order {order_id}",
+        tags={"order_id": order_id, "user_id": user_id, "status": "processing"}
+    )
+    
+    # ... simulate processing ...
+    
+    client.publish_to_stream(
+        "order-stream",
+        f"Order {order_id} completed",
+        tags={"order_id": order_id, "user_id": user_id, "status": "completed"}
+    )
+
+# Client-side (WebSocket): Subscribe to own orders
+consumer = client.subscribe_to_stream(
+    "order-stream",
+    tags_filter={"user_id": "USER-123"}  # Only my orders
+)
+
+# Real-time UI update
+while True:
+    event = consumer.get_event(timeout_sec=1.0)
+    if event:
+        # Update dashboard in real-time
+        dashboard.update(event.data, event.tags)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+10. EVENT STRUCTURE (What you receive)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class StreamEvent:
+    stream_id: str              # Which stream
+    event_id: str              # Unique event ID (evt-1, evt-2, ...)
+    timestamp: float           # When event was created
+    data: str                  # The actual data (string)
+    stream_type: StreamType    # Type (log, metrics, etc.)
+    format: StreamFormat       # Format (text, json, binary)
+    tags: Dict[str, str]       # Filtering tags
+    metadata: Dict[str, Any]   # Optional metadata
+
+# Access event data:
+event = consumer.get_event()
+event.stream_id       # "order-updates"
+event.event_id        # "evt-123"
+event.timestamp       # 1234567890.123
+event.data           # "Order confirmed"
+event.tags           # {"order_id": "123", "status": "confirmed"}
+event.to_dict()      # Full dict
+event.to_json()      # JSON string
+event.to_sse()       # Server-Sent Events format
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+11. ERROR HANDLING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+try:
+    client = FastDataBrokerClientWithLive()
+    if not client.connect():
+        print("Failed to connect")
+        exit(1)
+    
+    # Create stream
+    stream = client.create_live_stream("test")
+    
+    # Publish data
+    event_id = client.publish_to_stream("test", "Hello")
+    
+    # Subscribe
+    consumer = client.subscribe_to_stream("test")
+    event = consumer.get_event(timeout_sec=5.0)
+    
+    if event:
+        print(f"Received: {event.data}")
+    else:
+        print("No event received within timeout")
+    
+    consumer.disconnect()
+
+except ValueError as e:
+    print(f"Invalid parameter: {e}")
+except RuntimeError as e:
+    print(f"Runtime error: {e}")
+finally:
+    client.disconnect()
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+12. USE CASES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ ORDER TRACKING
+  - Publish: Order status changes
+  - Subscribe: Customer dashboard updates in real-time
+  
+✓ SYSTEM MONITORING
+  - Publish: CPU, memory, disk metrics
+  - Subscribe: Admin dashboard metrics
+  
+✓ USER ANALYTICS
+  - Publish: Click events, form submissions
+  - Subscribe: Analytics pipeline processes events
+  
+✓ CHAT/MESSAGING
+  - Publish: User messages
+  - Subscribe: Other users receive messages instantly
+  
+✓ LOG STREAMING
+  - Publish: Application logs
+  - Subscribe: Log aggregation service
+  
+✓ ALERTS & NOTIFICATIONS
+  - Publish: Critical alerts
+  - Subscribe: Alerting service routes notifications
+  
+✓ REAL-TIME COLLABORATION
+  - Publish: Document edits, changes
+  - Subscribe: Other users see changes instantly
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPARISON: Traditional Messages vs Live Streams
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use TRADITIONAL MESSAGES when:
+├─ Sending one-off notifications (receipt, confirmation)
+├─ Guaranteed delivery is critical
+├─ Message must be persisted for offline users
+├─ Delivery across multiple channels (email, SMS, push)
+└─ Example: Order confirmation email
+
+Use LIVE STREAMS when:
+├─ Need real-time updates (< 100ms)
+├─ Streaming continuous data (logs, metrics)
+├─ Multiple subscribers interested in same data
+├─ User watching real-time dashboard
+└─ Example: Live order status on tracking page
+
+Use BOTH:
+├─ Order confirmation email (message)
+├─ + Real-time tracking page updates (stream)
+├─ Low-inventory alert (message)
+├─ + Live inventory changes (stream)
+└─ Payment received confirmation (message)
+└─ + Invoice PDF showing (stream when ready)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERFORMANCE TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Batch small updates:
+   - Instead: 1000 puts with 10 bytes each
+   - Better: 10 puts with 1000 bytes each
+   
+2. Use tags effectively:
+   - Subscribe only to data you need (tag filters)
+   - Reduces unnecessary processing
+   
+3. Use appropriate stream type:
+   - METRICS for measurements
+   - LOG for debugging
+   - NOTIFICATIONS for alerts
+   
+4. Consider buffer settings:
+   - Large buffer (1000 events) = higher latency but fewer flushes
+   - Small buffer (100 events) = lower latency but more network calls
+   
+5. Monitor stream stats:
+   - Check buffered_events to see queue size
+   - Check subscriber count to optimize publishing
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INTEGRATION WITH EXISTING API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Use BOTH traditional messages and live streams together:
+
+# 1. Send traditional message (one-time notification)
+client.send_message(
+    recipient_ids=["user-123"],
+    content="Your order has been shipped!",
+    priority=100
+)
+
+# 2. Start live stream for tracking (continuous updates)
+tracking_stream = client.create_live_stream("order-tracking-user-123")
+tracking_stream.put("Package in transit", tags={"eta": "2 days"})
+tracking_stream.put("Package delivered", tags={"delivered": "true"})
+
+# 3. Consumer receives both:
+# - Message: Email notification
+# - Stream: Real-time tracking updates on dashboard
+
+═══════════════════════════════════════════════════════════════════════════════
+""")

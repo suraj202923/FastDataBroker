@@ -1,0 +1,10 @@
+//! Post Office Transport Layer - Phase 1
+//!
+//! QUIC protocol implementation for high-performance producer connectivity
+
+mod quic_server;
+pub mod certs;
+
+pub use quic_server::{
+    ConnectionPool, QuicServer, QuicServerConfig, QuicServerStats, load_certs, load_key,
+};

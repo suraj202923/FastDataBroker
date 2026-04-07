@@ -1,0 +1,272 @@
+---
+# StatefulSet for FastDataBroker (stateful deployment)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: FastDataBroker
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+    version: "0.5.0"
+spec:
+  serviceName: FastDataBroker
+  replicas: 3  # Production: 3+ for HA
+  selector:
+    matchLabels:
+      app: FastDataBroker
+  template:
+    metadata:
+      labels:
+        app: FastDataBroker
+        version: "0.5.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "6379"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: FastDataBroker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # Affinity for pod distribution
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - FastDataBroker
+                topologyKey: kubernetes.io/hostname
+        
+        # Node affinity (prefer nodes with certain labels)
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-type
+                    operator: In
+                    values:
+                      - compute
+                      - general
+
+      # Init containers
+      initContainers:
+        - name: init-permissions
+          image: busybox:1.36
+          command: ['sh', '-c', 'mkdir -p /data && chmod 777 /data']
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
+      # Main containers
+      containers:
+        - name: FastDataBroker
+          image: FastDataBroker:0.5.0
+          imagePullPolicy: IfNotPresent
+          
+          ports:
+            - name: quic
+              containerPort: 6379
+              protocol: UDP
+            - name: http
+              containerPort: 6380
+              protocol: TCP
+            - name: grpc
+              containerPort: 6381
+              protocol: TCP
+
+          # Environment variables
+          env:
+            - name: FastDataBroker_BIND
+              value: "0.0.0.0:6379"
+            - name: RUST_LOG
+              valueFrom:
+                configMapKeyRef:
+                  name: FastDataBroker-config
+                  key: logging.level
+            - name: RUST_BACKTRACE
+              value: "1"
+            - name: JAEGER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: FastDataBroker-config
+                  key: tracing.jaeger_host
+            - name: JAEGER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: FastDataBroker-config
+                  key: tracing.jaeger_port
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: FastDataBroker-secrets
+                  key: encryption_key
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+          # Resource requests and limits
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+
+          # Probes
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          # Volume mounts
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/FastDataBroker
+              readOnly: true
+
+          # Security context for container
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+
+          # Lifecycle hooks
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]
+
+      # Volumes
+      volumes:
+        - name: config
+          configMap:
+            name: FastDataBroker-config
+            defaultMode: 0644
+
+  # Persistent volume claim template for StatefulSet
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 50Gi
+
+---
+# Headless Service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: FastDataBroker
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  selector:
+    app: FastDataBroker
+  ports:
+    - name: quic
+      port: 6379
+      targetPort: quic
+      protocol: UDP
+    - name: http
+      port: 6380
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 6381
+      targetPort: grpc
+      protocol: TCP
+  publishNotReadyAddresses: true
+
+---
+# Service for external access (LoadBalancer)
+apiVersion: v1
+kind: Service
+metadata:
+  name: FastDataBroker-lb
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+spec:
+  type: LoadBalancer
+  selector:
+    app: FastDataBroker
+  ports:
+    - name: quic
+      port: 6379
+      targetPort: quic
+      protocol: UDP
+    - name: http
+      port: 6380
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 6381
+      targetPort: grpc
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+
+---
+# Service for internal API
+apiVersion: v1
+kind: Service
+metadata:
+  name: FastDataBroker-api
+  namespace: FastDataBroker
+  labels:
+    app: FastDataBroker
+spec:
+  type: ClusterIP
+  selector:
+    app: FastDataBroker
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

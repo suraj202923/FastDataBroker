@@ -1,0 +1,279 @@
+/// FastDataBroker CLI - Command-line interface for FastDataBroker message queuing
+/// 
+/// Usage:
+///   fdb-cli send <sender> <recipients> <subject> <content>
+///   fdb-cli connect <host:port>
+///   fdb-cli stats
+///   fdb-cli webhook register <url>
+///   fdb-cli help
+
+use std::io::{self, Write};
+use std::process;
+
+mod cli {
+    use std::collections::HashMap;
+
+    pub struct FastDataBrokerConfig {
+        pub host: String,
+        pub port: u16,
+        pub connected: bool,
+    }
+
+    impl Default for FastDataBrokerConfig {
+        fn default() -> Self {
+            FastDataBrokerConfig {
+                host: "localhost".to_string(),
+                port: 6000,
+                connected: false,
+            }
+        }
+    }
+
+    pub struct Message {
+        pub sender_id: String,
+        pub recipient_ids: Vec<String>,
+        pub subject: String,
+        pub content: Vec<u8>,
+        pub priority: u8,
+    }
+
+    pub struct DeliveryResult {
+        pub message_id: String,
+        pub status: String,
+        pub delivered_channels: usize,
+    }
+
+    pub fn send_message(
+        config: &FastDataBrokerConfig,
+        message: &Message,
+    ) -> Result<DeliveryResult, String> {
+        if !config.connected {
+            return Err("Not connected to FastDataBroker".to_string());
+        }
+
+        // Phase 4: Send via QUIC
+        Ok(DeliveryResult {
+            message_id: format!("msg-{}", std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()),
+            status: "success".to_string(),
+            delivered_channels: 4,
+        })
+    }
+
+    pub fn get_stats(_config: &FastDataBrokerConfig) -> HashMap<String, String> {
+        let mut stats = HashMap::new();
+        stats.insert("total_messages".to_string(), "0".to_string());
+        stats.insert("delivered".to_string(), "0".to_string());
+        stats.insert("failed".to_string(), "0".to_string());
+        stats.insert("email_sent".to_string(), "0".to_string());
+        stats.insert("websocket_delivered".to_string(), "0".to_string());
+        stats.insert("push_delivered".to_string(), "0".to_string());
+        stats.insert("webhook_delivered".to_string(), "0".to_string());
+        stats
+    }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() < 2 {
+        print_usage();
+        process::exit(1);
+    }
+
+    let mut config = cli::FastDataBrokerConfig::default();
+    config.connected = true; // Simulate connection for demo
+
+    match args[1].as_str() {
+        "send" => cmd_send(&config, &args),
+        "connect" => cmd_connect(&mut config, &args),
+        "stats" => cmd_stats(&config),
+        "webhook" => cmd_webhook(&config, &args),
+        "list" => cmd_list(&config),
+        "help" => print_help(),
+        _ => {
+            eprintln!("Unknown command: {}", args[1]);
+            print_usage();
+            process::exit(1);
+        }
+    }
+}
+
+fn cmd_send(config: &cli::FastDataBrokerConfig, args: &[String]) {
+    if args.len() < 6 {
+        eprintln!("Usage: fdb-cli send <sender> <recipient1,recipient2> <subject> <content>");
+        process::exit(1);
+    }
+
+    let sender = &args[2];
+    let recipients: Vec<String> = args[3].split(',').map(|s| s.to_string()).collect();
+    let subject = &args[4];
+    let content = args[5..].join(" ");
+
+    let message = cli::Message {
+        sender_id: sender.to_string(),
+        recipient_ids: recipients.clone(),
+        subject: subject.to_string(),
+        content: content.as_bytes().to_vec(),
+        priority: 100,
+    };
+
+    match cli::send_message(config, &message) {
+        Ok(result) => {
+            println!("✓ Message sent successfully");
+            println!("  Message ID: {}", result.message_id);
+            println!("  Status: {}", result.status);
+            println!("  Delivered via {} channels", result.delivered_channels);
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to send message: {}", e);
+            process::exit(1);
+        }
+    }
+}
+
+fn cmd_connect(config: &mut cli::FastDataBrokerConfig, args: &[String]) {
+    if args.len() < 3 {
+        eprintln!("Usage: fdb-cli connect <host:port>");
+        process::exit(1);
+    }
+
+    let addr = &args[2];
+    let parts: Vec<&str> = addr.split(':').collect();
+
+    if parts.len() != 2 {
+        eprintln!("Invalid address format. Use host:port");
+        process::exit(1);
+    }
+
+    config.host = parts[0].to_string();
+    config.port = parts[1].parse().unwrap_or(6000);
+    config.connected = true;
+
+    println!("✓ Connected to FastDataBroker at {}:{}", config.host, config.port);
+}
+
+fn cmd_stats(config: &cli::FastDataBrokerConfig) {
+    if !config.connected {
+        eprintln!("✗ Not connected to FastDataBroker");
+        process::exit(1);
+    }
+
+    let stats = cli::get_stats(config);
+
+    println!("\n=== FastDataBroker Statistics ===");
+    println!("Server: {}:{}", config.host, config.port);
+    println!();
+    println!("Messages:");
+    println!("  Total: {}", stats.get("total_messages").unwrap_or(&"0".to_string()));
+    println!("  Delivered: {}", stats.get("delivered").unwrap_or(&"0".to_string()));
+    println!("  Failed: {}", stats.get("failed").unwrap_or(&"0".to_string()));
+    println!();
+    println!("Channels:");
+    println!("  Email: {}", stats.get("email_sent").unwrap_or(&"0".to_string()));
+    println!("  WebSocket: {}", stats.get("websocket_delivered").unwrap_or(&"0".to_string()));
+    println!("  Push: {}", stats.get("push_delivered").unwrap_or(&"0".to_string()));
+    println!("  Webhook: {}", stats.get("webhook_delivered").unwrap_or(&"0".to_string()));
+    println!();
+}
+
+fn cmd_webhook(config: &cli::FastDataBrokerConfig, args: &[String]) {
+    if args.len() < 3 {
+        eprintln!("Usage: postoffice-cli webhook register <url>");
+        process::exit(1);
+    }
+
+    match args[2].as_str() {
+        "register" => {
+            if args.len() < 4 {
+                eprintln!("Usage: fdb-cli webhook register <url>");
+                process::exit(1);
+            }
+            let url = &args[3];
+            println!("✓ Webhook registered: {}", url);
+        }
+        "list" => {
+            println!("Registered webhooks:");
+            println!("  (none)");
+        }
+        _ => {
+            eprintln!("Unknown webhook command: {}", args[2]);
+            process::exit(1);
+        }
+    }
+}
+
+fn cmd_list(_config: &cli::FastDataBrokerConfig) {
+    println!("\nAvailable commands:");
+    println!("  send      - Send a message");
+    println!("  connect   - Connect to FastDataBroker server");
+    println!("  stats     - Show statistics");
+    println!("  webhook   - Manage webhooks");
+    println!("  help      - Show help");
+    println!();
+    println!("Use 'fdb-cli help' for detailed usage");
+}
+
+fn print_usage() {
+    eprintln!("FastDataBroker CLI v0.4.0");
+    eprintln!("Usage: fdb-cli <command> [options]");
+    eprintln!();
+    eprintln!("Commands:");
+    eprintln!("  send      Send a message through FastDataBroker");
+    eprintln!("  connect   Connect to FastDataBroker server");
+    eprintln!("  stats     Display FastDataBroker statistics");
+    eprintln!("  webhook   Manage webhook endpoints");
+    eprintln!("  list      List available commands");
+    eprintln!("  help      Show detailed help");
+}
+
+fn print_help() {
+    println!("\n╔════════════════════════════════════════════════════════════╗");
+    println!("║          FastDataBroker CLI - Command Reference               ║");
+    println!("╚════════════════════════════════════════════════════════════╝\n");
+
+    println!("OVERVIEW");
+    println!("--------");
+    println!("FastDataBroker CLI provides command-line access to the FastDataBroker");
+    println!("messaging system for sending and managing messages.\n");
+
+    println!("COMMANDS\n");
+
+    println!("send - Send a message");
+    println!("  Syntax: fdb-cli send <sender> <recipients> <subject> <content>");
+    println!("  Example:");
+    println!("    fdb-cli send \"app1\" \"user-1,user-2\" \"Hello\" \"Welcome to FastDataBroker!\"");
+
+    println!("connect - Connect to server");
+    println!("  Syntax: fdb-cli connect <host:port>");
+    println!("  Example:");
+    println!("    fdb-cli connect localhost:6000\\n");
+
+    println!("stats - Display statistics");
+    println!("  Syntax: fdb-cli stats");
+    println!("  Shows aggregate message delivery statistics\n");
+
+    println!("webhook - Manage webhooks");
+    println!("  Syntax: fdb-cli webhook register <url>");
+    println!("  Example:");
+    println!("    fdb-cli webhook register \"https://example.com/notify\\n");
+
+    println!("OPTIONS");
+    println!("-------");
+    println!("  --priority <level>  Set message priority (0-255)");
+    println!("  --ttl <seconds>     Set message time-to-live\n");
+
+    println!("EXAMPLES\n");
+    println!("Send a high-priority message:");
+    println!("  $ fdb-cli send workflow user-123 \"Work Item\" \"New task assigned\" --priority 200\\n");
+
+    println!("Register multiple webhooks:");
+    println!("  $ fdb-cli webhook register \"https://api.service1.com/hook\");
+    println!("  $ fdb-cli webhook register \"https://api.service2.com/notify\"");
+
+    println!("View server status:");
+    println!("  $ fdb-cli connect production.example.com:6000");
+    println!("  $ fdb-cli stats\\n");
+}

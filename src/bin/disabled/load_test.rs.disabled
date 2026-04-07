@@ -1,0 +1,208 @@
+// Load Test for QUIC Server - Phase 1
+//
+// Tests QUIC server with multiple concurrent connections
+// Target: 10,000+ msgs/sec throughput per connection
+
+use anyhow::Result;
+use quinn::{ClientConfig, Endpoint};
+use rustls::pki_types::ServerName;
+use std::net::SocketAddr;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::Instant;
+use tokio::task::JoinSet;
+use tracing_subscriber;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::WARN)
+        .init();
+
+    println!("🚀 Post Office QUIC Load Test - Phase 1");
+    println!("=====================================\n");
+
+    let server_addr: SocketAddr = "127.0.0.1:4433".parse()?;
+    let num_connections = 100;
+    let messages_per_connection = 100;
+
+    println!("📊 Load Test Configuration:");
+    println!("   Concurrent connections: {}", num_connections);
+    println!("   Messages per connection: {}", messages_per_connection);
+    println!("   Server address: {}\n", server_addr);
+
+    // Create custom certificate verifier
+    let config = create_client_config();
+
+    // Create QUIC endpoint
+    let endpoint = Arc::new(
+        Endpoint::new_with_abstract_socket(
+            Default::default(),
+            None,
+            std::net::UdpSocket::bind("127.0.0.1:0")?,
+            Arc::new(quinn::TokioRuntime),
+        )?
+    );
+
+    // Shared metrics
+    let total_messages = Arc::new(AtomicU64::new(0));
+    let total_bytes = Arc::new(AtomicU64::new(0));
+    let successful_connections = Arc::new(AtomicU64::new(0));
+    let failed_connections = Arc::new(AtomicU64::new(0));
+    let errors = Arc::new(AtomicU64::new(0));
+
+    let start = Instant::now();
+
+    println!("🔗 Starting connections...");
+
+    // Spawn connection tasks
+    let mut tasks = JoinSet::new();
+
+    for conn_id in 0..num_connections {
+        let endpoint = Arc::clone(&endpoint);
+        let total_messages = Arc::clone(&total_messages);
+        let total_bytes = Arc::clone(&total_bytes);
+        let successful_connections = Arc::clone(&successful_connections);
+        let failed_connections = Arc::clone(&failed_connections);
+        let errors = Arc::clone(&errors);
+        let config = create_client_config();
+
+        tasks.spawn(async move {
+            match endpoint.connect(server_addr, "localhost") {
+                Some(connecting) => match connecting.await {
+                    Ok(connection) => {
+                        successful_connections.fetch_add(1, Ordering::Relaxed);
+
+                        // Send multiple messages on this connection
+                        for msg_id in 0..messages_per_connection {
+                            match connection.open_bi().await {
+                                Ok((mut send, _recv)) => {
+                                    let message = format!("msg_{}_{}_{}", conn_id, msg_id, "test");
+                                    match send.write_all(message.as_bytes()).await {
+                                        Ok(_) => {
+                                            total_messages.fetch_add(1, Ordering::Relaxed);
+                                            total_bytes.fetch_add(message.len() as u64, Ordering::Relaxed);
+
+                                            let _ = send.finish().await;
+                                        }
+                                        Err(_) => {
+                                            errors.fetch_add(1, Ordering::Relaxed);
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    errors.fetch_add(1, Ordering::Relaxed);
+                                }
+                            }
+                        }
+
+                        connection.close(0u32.into(), b"done");
+                    }
+                    Err(_) => {
+                        failed_connections.fetch_add(1, Ordering::Relaxed);
+                    }
+                },
+                None => {
+                    failed_connections.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        });
+    }
+
+    // Wait for all tasks to complete
+    while let Some(_result) = tasks.join_next().await {}
+
+    let elapsed = start.elapsed();
+
+    // Calculate metrics
+    let total_msgs = total_messages.load(Ordering::Relaxed);
+    let total_bytes_sent = total_bytes.load(Ordering::Relaxed);
+    let successful_conns = successful_connections.load(Ordering::Relaxed);
+    let failed_conns = failed_connections.load(Ordering::Relaxed);
+    let total_errors = errors.load(Ordering::Relaxed);
+
+    let msg_per_sec = if elapsed.as_secs_f64() > 0.0 {
+        total_msgs as f64 / elapsed.as_secs_f64()
+    } else {
+        0.0
+    };
+
+    let mb_per_sec = if elapsed.as_secs_f64() > 0.0 {
+        total_bytes_sent as f64 / elapsed.as_secs_f64() / 1024.0 / 1024.0
+    } else {
+        0.0
+    };
+
+    println!("\n📊 Load Test Results:");
+    println!("===================");
+    println!("✅ Successful connections: {}/{}", successful_conns, num_connections);
+    println!("❌ Failed connections: {}", failed_conns);
+    println!("\n📈 Message Statistics:");
+    println!("   Total messages sent: {}", total_msgs);
+    println!("   Total bytes sent: {} KB", total_bytes_sent / 1024);
+    println!("   Time elapsed: {:.2}s", elapsed.as_secs_f64());
+    println!("   Throughput: {:.0} msg/sec", msg_per_sec);
+    println!("   Bandwidth: {:.2} MB/sec", mb_per_sec);
+    println!("   Errors: {}", total_errors);
+
+    println!("\n🎯 Performance Target Analysis:");
+    if msg_per_sec >= 10000.0 {
+        println!("   ✅ Target achieved: {:.0} msg/sec (Target: 10,000+ msg/sec)", msg_per_sec);
+    } else {
+        println!("   ⚠️  Below target: {:.0} msg/sec (Target: 10,000+ msg/sec)", msg_per_sec);
+    }
+
+    println!("\n✅ Load test completed!");
+
+    Ok(())
+}
+
+fn create_client_config() -> rustls::ClientConfig {
+    rustls::ClientConfig::builder()
+        .dangerous()
+        .with_custom_certificate_verifier(Arc::new(NoCertificateVerification))
+        .with_no_client_auth()
+}
+
+/// Certificate verifier that accepts all certificates (testing only)
+struct NoCertificateVerification;
+
+impl rustls::client::danger::ServerCertVerifier for NoCertificateVerification {
+    fn verify_server_cert(
+        &self,
+        _end_entity: &rustls::pki_types::CertificateDer<'_>,
+        _intermediates: &[rustls::pki_types::CertificateDer<'_>],
+        _server_name: &ServerName<'_>,
+        _ocsp_response: &[u8],
+        _now: rustls::pki_types::UnixTime,
+    ) -> std::result::Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
+        Ok(rustls::client::danger::ServerCertVerified::assertion())
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        _message: &[u8],
+        _cert: &rustls::pki_types::CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        _message: &[u8],
+        _cert: &rustls::pki_types::CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        vec![
+            rustls::SignatureScheme::RSA_PKCS1_SHA256,
+            rustls::SignatureScheme::ECDSA_NISTP256_SHA256,
+            rustls::SignatureScheme::ED25519,
+        ]
+    }
+}
