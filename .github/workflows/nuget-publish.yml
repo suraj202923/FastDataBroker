@@ -57,17 +57,15 @@ jobs:
       - name: Add NuGet source (v3)
         run: |
           dotnet nuget add source https://api.nuget.org/v3/index.json \
-            --name nuget.org
-      # Publish using Trusted Publishing (OIDC auto)
-      - name: Publish to NuGet
+            --name nuget.org      
+      - name: Publish to NuGet (Trusted Publishing)
         run: |
           for file in ${{ github.workspace }}/nupkg/*.nupkg; do
             echo "Publishing $file"
             dotnet nuget push "$file" \
-              --source nuget.org \
-              --skip-duplicate
+              --skip-duplicate \
+              --no-symbols true
           done
-
       # Optional: Create GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
