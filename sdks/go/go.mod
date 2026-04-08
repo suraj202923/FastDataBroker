@@ -1,6 +1,6 @@
 module github.com/suraj202923/FastDataBroker-go
 
-go 1.21
+go 1.22
 
 require (
 	// Phase 4: Add QUIC client library
