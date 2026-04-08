@@ -192,6 +192,12 @@ jobs:
           PRERELEASE="--prerelease"
         fi
         
+        # Check if release already exists
+        if gh release view "${{ github.ref_name }}" --repo="$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          echo "⚠️  Release ${{ github.ref_name }} already exists. Updating..."
+          gh release delete "${{ github.ref_name }}" --repo="$GITHUB_REPOSITORY" --yes
+        fi
+        
         gh release create "${{ github.ref_name }}" \
           --repo="$GITHUB_REPOSITORY" \
           --title="FastDataBroker Go SDK ${{ github.ref_name }}" \
@@ -220,6 +226,8 @@ jobs:
         ### Changes in This Release
         See [GitHub Commits](https://github.com/suraj202923/FastDataBroker/commits/${{ github.ref_name }})" \
           $PRERELEASE
+        
+        echo "✅ Release ${{ github.ref_name }} created successfully!"
 
   notify-release:
     runs-on: ubuntu-latest

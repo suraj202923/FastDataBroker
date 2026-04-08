@@ -134,6 +134,12 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Check if release already exists
+        if gh release view "${{ github.ref_name }}" --repo="$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          echo "⚠️  Release ${{ github.ref_name }} already exists. Skipping creation..."
+          exit 0
+        fi
+        
         gh release create "${{ github.ref_name }}" \
           --repo="$GITHUB_REPOSITORY" \
           --title="FastDataBroker C# SDK ${{ github.ref_name }}" \
