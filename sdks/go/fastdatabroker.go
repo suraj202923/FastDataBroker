@@ -99,6 +99,11 @@ func NewClient(host string, port int) *Client {
 	}
 }
 
+// NewClientWithDefaults creates a new client with default localhost:6000
+func NewClientWithDefaults() *Client {
+	return NewClient("localhost", 6000)
+}
+
 // Connect establishes connection to fastdatabroker server
 func (c *Client) Connect(ctx context.Context) error {
 	select {
