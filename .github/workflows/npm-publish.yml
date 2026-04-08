@@ -127,15 +127,15 @@ jobs:
     
     - name: Verify npm package
       run: |
-        npm view @FastDataBroker/sdk@${{ github.ref_name }}
-        npm info @FastDataBroker/sdk
+        npm view @fastdatabroker/sdk@${{ github.ref_name }}
+        npm info @fastdatabroker/sdk
     
     - name: Install and test published package
       run: |
         mkdir /tmp/test-install
         cd /tmp/test-install
-        npm install @FastDataBroker/sdk@${{ github.ref_name }}
-        node -e "const sdk = require('@FastDataBroker/sdk'); console.log('✅ FastDataBroker SDK successfully installed and imported!');"
+        npm install @fastdatabroker/sdk@${{ github.ref_name }}
+        node -e "const sdk = require('@fastdatabroker/sdk'); console.log('✅ FastDataBroker SDK successfully installed and imported!');"
 
   publish-github-release:
     runs-on: ubuntu-latest
@@ -148,6 +148,32 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Create GitHub Release
+      uses: actions/create-release@v1
+      if: |
+        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_npm == 'true')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: "FastDataBroker JavaScript SDK ${{ github.ref }}"
+        body: |
+          ## JavaScript SDK Release
+          
+          **Version:** ${{ github.ref }}
+          
+          **Package:** @fastdatabroker/sdk
+          
+          ### Features
+          - Full TypeScript support
+          - Async/await support
+          - WebSocket integration
+          - Webhook support
+          
+          ### Installation
+          ```bash
+          npm install @fastdatabroker/sdk
+          ```
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
