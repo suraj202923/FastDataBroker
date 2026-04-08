@@ -9,7 +9,7 @@ import (
 )
 
 // Version of the SDK
-const Version = "0.4.0"
+const Version = "0.1.12"
 
 // Priority levels for messages
 type Priority uint8

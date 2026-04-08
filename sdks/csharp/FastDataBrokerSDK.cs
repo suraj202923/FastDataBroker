@@ -7,11 +7,11 @@ namespace FastDataBroker
     /// <summary>
     /// FastDataBroker C# SDK - Client library for rst_queue FastDataBroker
     /// Provides synchronous and asynchronous interfaces for message delivery
-    /// Version 0.4.0
+    /// Version 0.1.12
     /// </summary>
     public class FastDataBrokerSDK
     {
-        public const string Version = "0.4.0";
+        public const string Version = "0.1.12";
 
         /// <summary>
         /// Priority levels for messages

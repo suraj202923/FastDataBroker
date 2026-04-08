@@ -41,7 +41,7 @@ fn _rst_queue(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAsyncPriorityQueue>()?;
     m.add_class::<PyQueueStats>()?;
     m.add_class::<PyProcessedResult>()?;
-    m.add("__version__", "0.1.8")?;
+    m.add("__version__", "0.1.12")?;
     
     // Add constants
     m.add("SEQUENTIAL", 0)?;

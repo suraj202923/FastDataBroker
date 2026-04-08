@@ -8,11 +8,11 @@ import java.util.concurrent.*;
  * FastDataBroker Java SDK - Client library for rst_queue FastDataBroker
  * Provides simple synchronous and asynchronous interfaces for message delivery
  *
- * @version 0.4.0
+ * @version 0.1.12
  */
 public class FastDataBrokerSDK {
 
-    public static final String VERSION = "0.4.0";
+    public static final String VERSION = "0.1.12";
 
     /**
      * Priority levels for messages

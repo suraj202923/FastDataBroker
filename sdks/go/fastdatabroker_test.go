@@ -54,7 +54,7 @@ func TestClientDisconnect(t *testing.T) {
 	
 	client.Connect(ctx)
 	
-	err := client.Disconnect(ctx)
+	err := client.Disconnect()
 	
 	// Should not panic
 	_ = err
