@@ -51,7 +51,13 @@ jobs:
     
     - name: Run tests
       working-directory: sdks/go
-      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      shell: pwsh
+      run: |
+        if ("${{ runner.os }}" -eq "Windows") {
+          go test -v -coverprofile="coverage.out" -covermode=atomic ./...
+        } else {
+          go test -v -race -coverprofile="coverage.out" -covermode=atomic ./...
+        }
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
