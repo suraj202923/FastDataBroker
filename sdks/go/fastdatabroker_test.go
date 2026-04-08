@@ -470,9 +470,6 @@ func TestMessageWithManyTags(t *testing.T) {
 // ============== Integration Tests ==============
 
 func TestFullMessageWorkflow(t *testing.T) {
-	// Create client
-	client := NewClientWithDefaults()
-	
 	// Create message
 	msg := &Message{
 		SenderID:       "system",
