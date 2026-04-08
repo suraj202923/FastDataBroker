@@ -130,7 +130,7 @@ jobs:
         cat docker-info.md
 
     - name: Upload Docker metadata
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: docker-metadata
         path: docker-info.md

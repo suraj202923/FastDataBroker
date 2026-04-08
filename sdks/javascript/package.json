@@ -1,6 +1,6 @@
 {
   "name": "@fastdatabroker/sdk",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "FastDataBroker JavaScript/TypeScript SDK for messaging and notifications",
   "main": "dist/fastdatabroker.js",
   "types": "dist/fastdatabroker.d.ts",

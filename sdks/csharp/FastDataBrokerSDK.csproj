@@ -4,7 +4,7 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
     <PackageId>FastDataBroker</PackageId>
     <Title>FastDataBroker C# SDK</Title>
-    <Version>0.1.11</Version>
+    <Version>0.1.12</Version>
     <Authors>FastDataBroker Team</Authors>
     <Description>C# SDK for FastDataBroker - A high-performance distributed message queue with multi-region clustering</Description>
     <PackageProjectUrl>https://github.com/suraj202923/FastDataBroker</PackageProjectUrl>

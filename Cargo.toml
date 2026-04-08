@@ -1,6 +1,6 @@
 [package]
 name = "fastdatabroker"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 authors = ["Suraj Kalbande <suraj202923@gmail.com>"]
 license = "MIT"

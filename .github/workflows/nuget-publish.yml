@@ -130,28 +130,25 @@ jobs:
         echo "✅ Package published successfully"
     
     - name: Create GitHub Release
-      uses: actions/create-release@v1
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: FastDataBroker C# SDK ${{ github.ref }}
-        body: |
-          ## C# SDK Release
-          
-          **Version:** ${{ github.ref }}
-          
-          ### Changes
-          - Supports .NET 6.0, 7.0, 8.0
-          - Available on NuGet: https://www.nuget.org/packages/FastDataBroker/
-          
-          ### Installation
-          ```
-          dotnet add package FastDataBroker
-          ```
-        draft: false
-        prerelease: false
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release create "${{ github.ref_name }}" \
+          --repo="$GITHUB_REPOSITORY" \
+          --title="FastDataBroker C# SDK ${{ github.ref_name }}" \
+          --notes="## C# SDK Release
+        
+        **Version:** ${{ github.ref_name }}
+        
+        ### Changes
+        - Supports .NET 6.0, 7.0, 8.0
+        - Available on NuGet: https://www.nuget.org/packages/FastDataBroker/
+        
+        ### Installation
+        \`\`\`
+        dotnet add package FastDataBroker
+        \`\`\`"
 
   nuget-validation:
     needs: publish-nuget

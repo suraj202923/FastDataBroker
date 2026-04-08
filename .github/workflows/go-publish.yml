@@ -54,7 +54,7 @@ jobs:
       run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./sdks/go/coverage.out
         flags: go
@@ -134,7 +134,7 @@ jobs:
         echo "Examples placeholder" > examples/examples.txt
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: go-sdk-artifacts
         path: sdks/go/docs/
@@ -178,39 +178,42 @@ jobs:
       run: go test -v -race ./...
     
     - name: Create GitHub Release
-      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: "FastDataBroker Go SDK ${{ github.ref_name }}"
-        body: |
-          ## Go SDK Release
-          
-          **Version:** ${{ github.ref_name }}
-          
-          **Module:** ${{ steps.gomodule.outputs.module }}
-          
-          ### Features
-          - Sync & Async message delivery
-          - Multi-channel support
-          - Priority-based messaging
-          - WebSocket integration
-          - Clustering support with failover
-          
-          ### Installation
-          ```bash
-          go get ${{ steps.gomodule.outputs.module }}@${{ github.ref_name }}
-          ```
-          
-          ### Supported Go Versions
-          - Go 1.21+
-          - Go 1.22+
-          
-          ### Changes in This Release
-          See [GitHub Commits](https://github.com/suraj202923/FastDataBroker/commits/${{ github.ref_name }})
-        draft: false
-        prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PRERELEASE=""
+        if [[ "${{ github.ref_name }}" =~ (-rc|-beta|-alpha) ]]; then
+          PRERELEASE="--prerelease"
+        fi
+        
+        gh release create "${{ github.ref_name }}" \
+          --repo="$GITHUB_REPOSITORY" \
+          --title="FastDataBroker Go SDK ${{ github.ref_name }}" \
+          --notes="## Go SDK Release
+        
+        **Version:** ${{ github.ref_name }}
+        
+        **Module:** ${{ steps.gomodule.outputs.module }}
+        
+        ### Features
+        - Sync & Async message delivery
+        - Multi-channel support
+        - Priority-based messaging
+        - WebSocket integration
+        - Clustering support with failover
+        
+        ### Installation
+        \`\`\`bash
+        go get ${{ steps.gomodule.outputs.module }}@${{ github.ref_name }}
+        \`\`\`
+        
+        ### Supported Go Versions
+        - Go 1.21+
+        - Go 1.22+
+        
+        ### Changes in This Release
+        See [GitHub Commits](https://github.com/suraj202923/FastDataBroker/commits/${{ github.ref_name }})" \
+          $PRERELEASE
 
   notify-release:
     runs-on: ubuntu-latest

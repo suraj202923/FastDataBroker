@@ -575,7 +575,7 @@ func BenchmarkNewMessage(b *testing.B) {
 
 func BenchmarkClientCreation(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = NewClientWithDefaults()
+		_ = NewClient("localhost", 6000)
 	}
 }
 
@@ -590,28 +590,4 @@ func BenchmarkDeliveryResult(b *testing.B) {
 	}
 }
 
-// ============== Helper Functions ==============
-
-func NewClient(host string, port int) *Client {
-	return &Client{
-		host: host,
-		port: port,
-	}
-}
-
-func NewClientWithDefaults() *Client {
-	return NewClient("localhost", 6000)
-}
-
-type Client struct {
-	host string
-	port int
-}
-
-func (c *Client) Connect(ctx context.Context) error {
-	return nil
-}
-
-func (c *Client) Disconnect(ctx context.Context) error {
-	return nil
-}
+// ============== Client Tests ==============

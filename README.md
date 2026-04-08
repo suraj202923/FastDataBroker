@@ -1068,6 +1068,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v0.1.12 (2026-04-08) - GitHub Actions Fixes & Workflow Improvements
+- ✨ **Fixed deprecated GitHub Actions** - Updated to v4 standards
+- 🔧 **Fixed Go SDK duplicate NewClient** - Resolved go vet redeclaration error
+- 📦 **Updated package-lock.json** - Version consistency (0.1.11 → 0.1.12)
+- 🚀 **Replaced deprecated create-release** - Using modern `gh release create`
+- 💾 **All workflows tested and verified** - CI/CD ready for production
+- ✅ **Production-ready** with all fixes applied
+
 ### v0.1.11 (2026-04-08) - Global Release - Complete SDK Suite & CI/CD
 - ✨ **README files for all SDKs**: Go, Java, JavaScript, C#
 - 📦 **Unified versioning** across all SDKs (0.1.11)
