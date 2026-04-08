@@ -71,10 +71,10 @@ type WebSocketClientInfo struct {
 
 // WebhookConfig configuration for webhook endpoints
 type WebhookConfig struct {
-	URL      string
-	Headers  map[string]string
-	Retries  int
-	Timeout  time.Duration
+	URL       string
+	Headers   map[string]string
+	Retries   int
+	Timeout   time.Duration
 	VerifySSL bool
 }
 
@@ -322,12 +322,12 @@ func (mb *MessageBuilder) Build() *Message {
 
 // PushNotificationBuilder for building push notifications
 type PushNotificationBuilder struct {
-	title  string
-	body   string
-	icon   string
-	badge  string
-	sound  string
-	data   map[string]string
+	title string
+	body  string
+	icon  string
+	badge string
+	sound string
+	data  map[string]string
 }
 
 // NewPushNotification creates a new push notification builder
@@ -365,11 +365,11 @@ func (pnb *PushNotificationBuilder) AddData(key, value string) *PushNotification
 // Build builds the notification
 func (pnb *PushNotificationBuilder) Build() map[string]interface{} {
 	return map[string]interface{}{
-		"title":  pnb.title,
-		"body":   pnb.body,
-		"icon":   pnb.icon,
-		"badge":  pnb.badge,
-		"sound":  pnb.sound,
-		"data":   pnb.data,
+		"title": pnb.title,
+		"body":  pnb.body,
+		"icon":  pnb.icon,
+		"badge": pnb.badge,
+		"sound": pnb.sound,
+		"data":  pnb.data,
 	}
 }
