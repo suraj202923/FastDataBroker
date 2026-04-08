@@ -11,7 +11,7 @@ namespace FastDataBroker.Tests
         [Fact]
         public void TestVersion()
         {
-            Assert.Equal("0.1.12", FastDataBrokerSDK.Version);
+            Assert.Equal("0.1.13", FastDataBrokerSDK.Version);
         }
 
         [Fact]

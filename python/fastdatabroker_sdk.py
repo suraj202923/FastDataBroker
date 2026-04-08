@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 
 
 class Priority(Enum):

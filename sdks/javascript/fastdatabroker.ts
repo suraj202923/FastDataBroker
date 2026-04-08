@@ -2,7 +2,7 @@
  * FastDataBroker JavaScript/TypeScript SDK
  * Client library for rst_queue FastDataBroker messaging system
  * 
- * @version 0.1.12
+ * @version 0.1.13
  */
 
 export enum Priority {
