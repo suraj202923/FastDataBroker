@@ -149,9 +149,6 @@ jobs:
     
     - name: Create GitHub Release
       uses: actions/create-release@v1
-      if: |
-        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_npm == 'true')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -173,36 +170,6 @@ jobs:
           ### Installation
           ```bash
           npm install @fastdatabroker/sdk
-          ```
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: "FastDataBroker JavaScript SDK ${{ github.ref_name }}"
-        body: |
-          ## FastDataBroker JavaScript SDK ${{ github.ref_name }}
-          
-          ### Published Packages
-          - **npm**: `npm install @FastDataBroker/sdk@${{ github.ref_name }}`
-          
-          ### Installation
-          ```bash
-          npm install @FastDataBroker/sdk
-          ```
-          
-          ### Quick Start
-          ```typescript
-          import { Client, Producer } from '@FastDataBroker/sdk';
-          
-          const client = new Client({
-            bootstrapServers: ['broker1:8080', 'broker2:8081'],
-            streamName: 'orders'
-          });
-          
-          const producer = new Producer(client);
-          const partition = await producer.send('order-123', { amount: 100 });
-          console.log(`Message sent to partition ${partition}`);
           ```
           
           ### Changes in This Release
