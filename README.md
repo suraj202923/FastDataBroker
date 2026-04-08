@@ -1068,6 +1068,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v0.1.11 (2026-04-08) - Global Release - Complete SDK Suite & CI/CD
+- ✨ **README files for all SDKs**: Go, Java, JavaScript, C#
+- 📦 **Unified versioning** across all SDKs (0.1.11)
+- 🔄 **GitHub Actions workflow for Go SDK** - Automated build, test, publish
+- 🌍 **Global release** - Coordinated SDK releases
+- ✅ **Production-ready** for all language SDKs
+- 📖 Complete documentation with examples for Go, Java, JS, C#
+
 ### v0.1.8 (2026-04-07) - Compiler Warnings Cleanup & Code Quality
 - ✅ **Fixed 11 compiler warnings** - improved code cleanliness
 - ✅ **Removed unused imports** (self, Read, Receiver)

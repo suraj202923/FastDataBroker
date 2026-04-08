@@ -3,7 +3,7 @@
 C# SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering.
 
 ## Version
-0.4.0
+0.1.11
 
 ## Features
 

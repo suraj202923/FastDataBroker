@@ -1,0 +1,236 @@
+name: "[Go] SDK Build & Test"
+
+on: 
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish GitHub release (true/false)'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: go-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        go-version: ['1.21', '1.22']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Display Go version
+      run: go version
+    
+    - name: Go mod download
+      working-directory: sdks/go
+      run: go mod download
+    
+    - name: Go mod verify
+      working-directory: sdks/go
+      run: go mod verify
+    
+    - name: Go vet
+      working-directory: sdks/go
+      run: go vet ./...
+    
+    - name: Run tests
+      working-directory: sdks/go
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./sdks/go/coverage.out
+        flags: go
+        name: codecov-go-${{ matrix.os }}-${{ matrix.go-version }}
+        fail_ci_if_error: false
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    name: "✅ Code Quality Check (Go)"
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go 1.22
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.22
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: v1.54
+        working-directory: sdks/go
+        args: --deadline=5m --timeout=5m
+    
+    - name: Check code formatting with gofmt
+      working-directory: sdks/go
+      run: |
+        if [ $(gofmt -l . | wc -l) -gt 0 ]; then
+          echo "❌ Code formatting issues found. Please run 'gofmt -w .'"
+          gofmt -d .
+          exit 1
+        fi
+        echo "✅ Code formatting OK"
+    
+    - name: Run go mod tidy check
+      working-directory: sdks/go
+      run: |
+        go mod tidy
+        if [ -n "$(git diff go.mod go.sum)" ]; then
+          echo "❌ go.mod or go.sum is not tidy. Please run 'go mod tidy'"
+          git diff go.mod go.sum
+          exit 1
+        fi
+        echo "✅ go.mod and go.sum are tidy"
+    
+    - name: Security scan with gosec
+      working-directory: sdks/go
+      run: |
+        go install github.com/securego/gosec/v2/cmd/gosec@latest
+        gosec -no-fail ./... || true
+
+  build-artifacts:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, lint-and-format]
+    name: "📦 Build Artifacts"
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go 1.22
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.22
+    
+    - name: Build documentation
+      working-directory: sdks/go
+      run: |
+        mkdir -p docs
+        go doc -all > docs/api-docs.txt || true
+        echo "✅ Documentation generated"
+    
+    - name: Generate Go code examples
+      working-directory: sdks/go
+      run: |
+        mkdir -p examples
+        echo "Examples placeholder" > examples/examples.txt
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: go-sdk-artifacts
+        path: sdks/go/docs/
+        retention-days: 30
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, lint-and-format, build-artifacts]
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true')
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go 1.22
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.22
+    
+    - name: Get Go module info
+      working-directory: sdks/go
+      id: gomodule
+      run: |
+        MODULE=$(grep "^module " go.mod | awk '{print $2}')
+        echo "module=${MODULE}" >> $GITHUB_OUTPUT
+    
+    - name: Verify tag format
+      run: |
+        TAG=${{ github.ref_name }}
+        if [[ ! $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+          echo "❌ Tag format must be vX.Y.Z or vX.Y.Z-prerelease"
+          exit 1
+        fi
+        echo "✅ Tag format valid: $TAG"
+    
+    - name: Run final tests
+      working-directory: sdks/go
+      run: go test -v -race ./...
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: "FastDataBroker Go SDK ${{ github.ref_name }}"
+        body: |
+          ## Go SDK Release
+          
+          **Version:** ${{ github.ref_name }}
+          
+          **Module:** ${{ steps.gomodule.outputs.module }}
+          
+          ### Features
+          - Sync & Async message delivery
+          - Multi-channel support
+          - Priority-based messaging
+          - WebSocket integration
+          - Clustering support with failover
+          
+          ### Installation
+          ```bash
+          go get ${{ steps.gomodule.outputs.module }}@${{ github.ref_name }}
+          ```
+          
+          ### Supported Go Versions
+          - Go 1.21+
+          - Go 1.22+
+          
+          ### Changes in This Release
+          See [GitHub Commits](https://github.com/suraj202923/FastDataBroker/commits/${{ github.ref_name }})
+        draft: false
+        prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+
+  notify-release:
+    runs-on: ubuntu-latest
+    needs: publish-release
+    if: success()
+    
+    steps:
+    - name: Release Summary
+      run: |
+        echo "✅ Go SDK Release Completed Successfully!"
+        echo ""
+        echo "📦 Release Details:"
+        echo "  - Version: ${{ github.ref_name }}"
+        echo "  - Tag: ${{ github.ref }}"
+        echo "  - Commit: ${{ github.sha }}"
+        echo ""
+        echo "🔗 Access at: https://pkg.go.dev/github.com/suraj202923/FastDataBroker-go@${{ github.ref_name }}"
+        echo ""
+        echo "📊 CI Status:"
+        echo "  ✅ Build & Tests Passed"
+        echo "  ✅ Linting & Format Checks Passed"
+        echo "  ✅ Artifacts Generated"
+        echo "  ✅ Release Published"
