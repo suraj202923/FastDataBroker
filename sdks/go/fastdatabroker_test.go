@@ -52,7 +52,9 @@ func TestClientDisconnect(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	
-	client.Connect(ctx)
+	if err := client.Connect(ctx); err != nil {
+		t.Logf("Connection error: %v (expected if server not running)", err)
+	}
 	
 	err := client.Disconnect()
 	
