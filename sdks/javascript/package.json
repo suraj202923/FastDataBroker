@@ -1,9 +1,9 @@
 {
   "name": "@fastdatabroker/sdk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "FastDataBroker JavaScript/TypeScript SDK for messaging and notifications",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/fastdatabroker.js",
+  "types": "dist/fastdatabroker.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest",
