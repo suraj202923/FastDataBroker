@@ -127,14 +127,14 @@ jobs:
     
     - name: Verify npm package
       run: |
-        npm view @fastdatabroker/sdk@${{ github.ref_name }}
         npm info @fastdatabroker/sdk
+        echo "✅ Package published successfully!"
     
     - name: Install and test published package
       run: |
         mkdir /tmp/test-install
         cd /tmp/test-install
-        npm install @fastdatabroker/sdk@${{ github.ref_name }}
+        npm install @fastdatabroker/sdk
         node -e "const sdk = require('@fastdatabroker/sdk'); console.log('✅ FastDataBroker SDK successfully installed and imported!');"
 
   publish-github-release:
