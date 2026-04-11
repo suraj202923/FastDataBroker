@@ -2,7 +2,7 @@
 
 Java SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.14
+**Version:** 0.1.15
 
 ## 📋 Table of Contents
 
@@ -47,7 +47,7 @@ Add to your `pom.xml`:
 ### Gradle
 
 ```gradle
-implementation 'com.fastdatabroker:fastdatabroker-sdk:0.1.14'
+implementation 'com.fastdatabroker:fastdatabroker-sdk:0.1.15'
 ```
 
 ### From Source

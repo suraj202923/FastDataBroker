@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "fastdatabroker"
-version = "0.1.14"
+version = "0.1.15"
 description = "FastDataBroker - High-performance distributed message queue with multi-region clustering and QUIC protocol support"
 requires-python = ">=3.8"
 authors = [

@@ -2,7 +2,7 @@
 
 JavaScript/TypeScript SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.14
+**Version:** 0.1.15
 
 ## 📋 Table of Contents
 
@@ -812,7 +812,7 @@ Contributions are welcome! Please:
 
 ## Changelog
 
-### Version 0.1.14 (Latest)
+### Version 0.1.15 (Latest)
 - Enhanced documentation with 8 complete examples
 - WebSocket streaming integration
 - Event emitter support
