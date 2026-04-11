@@ -7,7 +7,7 @@
 
     <groupId>com.FastDataBroker</groupId>
     <artifactId>FastDataBroker-sdk</artifactId>
-    <version>0.1.12</version>
+    <version>0.1.14</version>
     <packaging>jar</packaging>
 
     <name>FastDataBroker SDK</name>

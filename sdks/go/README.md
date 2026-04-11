@@ -2,7 +2,7 @@
 
 Go SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.13
+**Version:** 0.1.14
 
 ## 📋 Table of Contents
 

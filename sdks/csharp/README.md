@@ -2,7 +2,7 @@
 
 C# SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.13
+**Version:** 0.1.14
 
 ## 📋 Table of Contents
 
@@ -50,7 +50,7 @@ Add to your `.csproj`:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="FastDataBroker" Version="0.1.13" />
+    <PackageReference Include="FastDataBroker" Version="0.1.14" />
 </ItemGroup>
 ```
 
