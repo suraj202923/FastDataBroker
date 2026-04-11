@@ -2,12 +2,22 @@
 
 JavaScript/TypeScript SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-## Version
-0.1.12
+**Version:** 0.1.13
+
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Complete Examples](#complete-examples)
+- [API Reference](#api-reference)
+- [Error Handling](#error-handling)
+- [Advanced Features](#advanced-features)
+- [Testing](#testing)
 
 ## Features
 
-- 🚀 **Synchronous & Asynchronous APIs** - Promise-based async/await support
+- 🚀 **Promise-Based Async/Await** - Modern async/await and Promise support
 - 📨 **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
 - 🎯 **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
 - 🔄 **Message Confirmation** - Optional delivery confirmation
@@ -19,6 +29,7 @@ JavaScript/TypeScript SDK for FastDataBroker - A high-performance distributed me
 - 🔐 **Clustering Support** - Multi-region failover and load balancing
 - 📦 **TypeScript Support** - Full type definitions included
 - 🎯 **Event Emitters** - Node.js EventEmitter pattern support
+- ⚙️ **Node.js & Browser** - Works in both environments
 
 ## Installation
 
@@ -50,7 +61,7 @@ npm run build
 
 ## Quick Start
 
-### JavaScript (ES6+)
+### 1. Basic Client Setup (JavaScript)
 
 ```javascript
 import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
@@ -60,189 +71,600 @@ const client = new FastDataBrokerSDK('localhost', 6000);
 
 // Connect to FastDataBroker
 await client.connect();
+console.log('Connected to FastDataBroker');
 
-// Create a message
-const message = {
-  senderId: 'user-1',
-  recipientIds: ['user-2', 'user-3'],
-  subject: 'Hello from JavaScript',
-  content: Buffer.from('This is a test message'),
-  priority: Priority.HIGH,
-};
+// Your code here
 
-// Send message
-const result = await client.sendMessage(message);
-console.log(`Message sent: ${result.messageId}`);
-
-// Disconnect
 await client.disconnect();
 ```
 
-### TypeScript
+### 2. Basic Client Setup (TypeScript)
 
 ```typescript
 import { FastDataBrokerSDK, Priority, IMessage, ISendResult } from '@fastdatabroker/sdk';
 
 const client = new FastDataBrokerSDK('localhost', 6000);
+
 await client.connect();
+console.log('Connected to FastDataBroker');
 
-const message: IMessage = {
-  senderId: 'user-1',
-  recipientIds: ['user-2', 'user-3'],
-  subject: 'Hello from TypeScript',
-  content: Buffer.from('This is a test message'),
-  priority: Priority.HIGH,
-};
-
-const result: ISendResult = await client.sendMessage(message);
-console.log(`Message sent: ${result.messageId}`);
+// Your code here
 
 await client.disconnect();
 ```
 
-### Priority Levels
+### 3. Send a Simple Message
 
 ```javascript
-import { Priority } from '@fastdatabroker/sdk';
-
-message.priority = Priority.CRITICAL;    // 255
-// Other options:
-// - Priority.URGENT (200)
-// - Priority.HIGH (150)
-// - Priority.NORMAL (100)
-// - Priority.DEFERRED (50)
-```
-
-### Message TTL (Time-To-Live)
-
-```javascript
-// Message expires after 3600 seconds (1 hour)
-message.ttlSeconds = 3600;
-```
-
-### Message Tags
-
-```javascript
-message.tags = {
-  region: 'us-east',
-  category: 'notification',
-  version: 'v1',
+const message = {
+  senderId: 'app-001',
+  recipientIds: ['user-123', 'user-456'],
+  subject: 'Notification',
+  content: Buffer.from('Hello from FastDataBroker!'),
+  priority: Priority.HIGH,
 };
+
+const result = await client.sendMessage(message);
+console.log(`✓ Message sent: ${result.messageId}`);
+console.log(`  Status: ${result.status}`);
+console.log(`  Delivered channels: ${result.deliveredChannels}`);
 ```
 
-### Error Handling
+## Complete Examples
+
+### Example 1: Priority-Based Messaging
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function priorityExample() {
+  const client = new FastDataBrokerSDK('localhost', 6000);
+  
+  try {
+    await client.connect();
+
+    // Critical priority message
+    const criticalMsg = {
+      senderId: 'system',
+      recipientIds: ['admin'],
+      subject: 'CRITICAL: System Alert',
+      content: Buffer.from('Immediate action required'),
+      priority: Priority.CRITICAL,  // 255
+    };
+
+    const result1 = await client.sendMessage(criticalMsg);
+    console.log(`✓ Critical message sent: ${result1.messageId}`);
+
+    // Urgent priority message
+    const urgentMsg = {
+      senderId: 'system',
+      recipientIds: ['manager'],
+      subject: 'URGENT: Important Update',
+      content: Buffer.from('Requires immediate attention'),
+      priority: Priority.URGENT,  // 200
+    };
+
+    const result2 = await client.sendMessage(urgentMsg);
+    console.log(`✓ Urgent message sent: ${result2.messageId}`);
+
+    // Normal priority message
+    const normalMsg = {
+      senderId: 'system',
+      recipientIds: ['user'],
+      subject: 'Regular Update',
+      content: Buffer.from('Routine notification'),
+      priority: Priority.NORMAL,  // 100
+    };
+
+    const result3 = await client.sendMessage(normalMsg);
+    console.log(`✓ Normal message sent: ${result3.messageId}`);
+
+    // Deferred priority message
+    const deferredMsg = {
+      senderId: 'system',
+      recipientIds: ['background-worker'],
+      subject: 'Background Task',
+      content: Buffer.from('Can be processed later'),
+      priority: Priority.DEFERRED,  // 50
+    };
+
+    const result4 = await client.sendMessage(deferredMsg);
+    console.log(`✓ Deferred message sent: ${result4.messageId}`);
+  } finally {
+    await client.disconnect();
+  }
+}
+
+priorityExample();
+```
+
+### Example 2: Batch Message Sending with TTL
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function batchExample() {
+  const client = new FastDataBrokerSDK('localhost', 6000);
+  
+  try {
+    await client.connect();
+
+    const messages = [];
+    
+    // Create 5 messages with different TTLs
+    for (let i = 0; i < 5; i++) {
+      messages.push({
+        senderId: 'batch-sender',
+        recipientIds: [`recipient-${i}`],
+        subject: `Batch Message ${i + 1}`,
+        content: Buffer.from(`Content for message ${i + 1}`),
+        priority: Priority.HIGH,
+        ttlSeconds: 3600 * (i + 1),  // 1, 2, 3, 4, 5 hours
+        requireConfirmation: true,
+      });
+    }
+
+    // Send all messages
+    for (const msg of messages) {
+      try {
+        const result = await client.sendMessage(msg);
+        console.log(`✓ Message sent - ID: ${result.messageId}, TTL: ${msg.ttlSeconds}s`);
+      } catch (error) {
+        console.error(`✗ Failed: ${error.message}`);
+      }
+    }
+  } finally {
+    await client.disconnect();
+  }
+}
+
+batchExample();
+```
+
+### Example 3: Tagged Messages for Organization
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function taggedExample() {
+  const client = new FastDataBrokerSDK('localhost', 6000);
+  
+  try {
+    await client.connect();
+
+    const message = {
+      senderId: 'order-service',
+      recipientIds: ['customer-789'],
+      subject: 'Order Confirmation',
+      content: Buffer.from('Your order has been confirmed'),
+      priority: Priority.HIGH,
+      tags: {
+        'order-id': 'ORD-2024-001234',
+        'region': 'us-west-2',
+        'category': 'order-notification',
+        'version': 'v2',
+        'timestamp': new Date().toISOString(),
+      },
+    };
+
+    const result = await client.sendMessage(message);
+    console.log(`✓ Tagged message sent: ${result.messageId}`);
+    console.log('  Tags:');
+    Object.entries(message.tags).forEach(([key, value]) => {
+      console.log(`    - ${key}: ${value}`);
+    });
+  } finally {
+    await client.disconnect();
+  }
+}
+
+taggedExample();
+```
+
+### Example 4: WebSocket Integration
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function webSocketExample() {
+  const wsClient = new FastDataBrokerSDK.WebSocketClient('ws://localhost:6001');
+
+  try {
+    await wsClient.connect();
+    console.log('✓ WebSocket client connected');
+
+    // Send message via WebSocket
+    const message = {
+      senderId: 'app',
+      recipientIds: ['user-1', 'user-2', 'user-3'],
+      subject: 'Real-time Update',
+      content: Buffer.from('WebSocket real-time notification'),
+      priority: Priority.URGENT,
+    };
+
+    const result = await wsClient.sendMessage(message);
+    console.log(`✓ Message sent via WebSocket: ${result.messageId}`);
+
+    // Listen for messages using event emitter
+    wsClient.on('message', (message) => {
+      console.log(`✓ Received: ${message.subject}`);
+    });
+
+    wsClient.on('error', (error) => {
+      console.error(`✗ WebSocket error: ${error.message}`);
+    });
+
+    // Subscribe to specific user messages
+    const stream = wsClient.subscribe('user-1');
+    stream.on('message', (message) => {
+      console.log(`New message for user-1: ${message.subject}`);
+    });
+
+  } finally {
+    await wsClient.disconnect();
+  }
+}
+
+webSocketExample();
+```
+
+### Example 5: Promise vs Async/Await
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+const client = new FastDataBrokerSDK('localhost', 6000);
+const message = {
+  senderId: 'app',
+  recipientIds: ['user-1'],
+  subject: 'Test',
+  content: Buffer.from('Test content'),
+  priority: Priority.HIGH,
+};
+
+// Promise-based approach
+client.connect()
+  .then(() => client.sendMessage(message))
+  .then(result => console.log(`Sent: ${result.messageId}`))
+  .catch(error => console.error(`Error: ${error.message}`))
+  .finally(() => client.disconnect());
+
+// Async/Await approach (recommended)
+async function asyncAwaitExample() {
+  try {
+    await client.connect();
+    const result = await client.sendMessage(message);
+    console.log(`Sent: ${result.messageId}`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  } finally {
+    await client.disconnect();
+  }
+}
+
+asyncAwaitExample();
+```
+
+### Example 6: Streaming & Events
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function streamingExample() {
+  const client = new FastDataBrokerSDK('localhost', 6000);
+  
+  try {
+    await client.connect();
+
+    // Subscribe to messages
+    const stream = client.subscribe('user-1');
+
+    stream.on('message', (message) => {
+      console.log(`Received: ${message.subject}`);
+      console.log(`  From: ${message.senderId}`);
+      console.log(`  Content: ${Buffer.from(message.content).toString()}`);
+    });
+
+    stream.on('error', (error) => {
+      console.error(`Stream error: ${error.message}`);
+    });
+
+    // Send a test message
+    const message = {
+      senderId: 'test-app',
+      recipientIds: ['user-1'],
+      subject: 'Test Stream Message',
+      content: Buffer.from('This is a stream test'),
+      priority: Priority.NORMAL,
+    };
+
+    const result = await client.sendMessage(message);
+    console.log(`Message sent: ${result.messageId}`);
+
+    // Unsubscribe after some time
+    setTimeout(() => {
+      stream.unsubscribe();
+      console.log('Unsubscribed from messages');
+    }, 5000);
+  } finally {
+    await client.disconnect();
+  }
+}
+
+streamingExample();
+```
+
+### Example 7: Error Handling
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function errorHandlingExample() {
+  const client = new FastDataBrokerSDK('localhost', 6000);
+
+  try {
+    await client.connect();
+
+    const message = {
+      senderId: 'app',
+      recipientIds: ['user-1'],
+      subject: 'Test',
+      content: Buffer.from('Test'),
+      priority: Priority.HIGH,
+    };
+
+    try {
+      const result = await client.sendMessage(message);
+      console.log(`Message sent: ${result.messageId}`);
+    } catch (error) {
+      if (error.code === 'VALIDATION_ERROR') {
+        console.error(`Validation error: ${error.message}`);
+      } else if (error.code === 'CONNECTION_ERROR') {
+        console.error(`Connection error: ${error.message}`);
+      } else if (error.code === 'TIMEOUT_ERROR') {
+        console.error('Request timeout');
+      } else {
+        console.error(`Unexpected error: ${error.message}`);
+      }
+    }
+  } finally {
+    await client.disconnect();
+  }
+}
+
+errorHandlingExample();
+```
+
+### Example 8: Complete End-to-End Application
+
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
+
+async function completeExample() {
+  console.log('=== FastDataBroker JavaScript SDK Complete Example ===\n');
+
+  const client = new FastDataBrokerSDK('localhost', 6000);
+
+  try {
+    // 1. Connection
+    console.log('1. Connecting to FastDataBroker...');
+    await client.connect();
+    console.log('✓ Connected successfully\n');
+
+    // 2. Send critical message
+    console.log('2. Sending critical priority message...');
+    const start = Date.now();
+    const criticalMsg = {
+      senderId: 'app',
+      recipientIds: ['user-123'],
+      subject: 'Critical Alert',
+      content: Buffer.from('This is critical'),
+      priority: Priority.CRITICAL,
+      ttlSeconds: 3600,
+      tags: {
+        'severity': 'critical',
+        'timestamp': new Date().toISOString(),
+      },
+    };
+
+    const result1 = await client.sendMessage(criticalMsg);
+    const duration = Date.now() - start;
+    console.log(`✓ Message sent: ${result1.messageId} (took ${duration}ms)`);
+    console.log(`  Status: ${result1.status}`);
+    console.log();
+
+    // 3. Send batch messages
+    console.log('3. Sending batch messages...');
+    for (let i = 0; i < 3; i++) {
+      const msg = {
+        senderId: 'batch-app',
+        recipientIds: [`user-${i}`],
+        subject: `Batch message ${i + 1}`,
+        content: Buffer.from(`Content ${i + 1}`),
+        priority: Priority.NORMAL,
+        ttlSeconds: 7200,
+      };
+      const res = await client.sendMessage(msg);
+      console.log(`  ✓ Message ${i + 1}: ${res.messageId}`);
+    }
+    console.log();
+
+    // 4. Send async messages
+    console.log('4. Sending async messages...');
+    const asyncPromises = [];
+    for (let i = 0; i < 2; i++) {
+      const msg = {
+        senderId: 'async-app',
+        recipientIds: [`user-async-${i}`],
+        subject: `Async message ${i + 1}`,
+        content: Buffer.from(`Async content ${i + 1}`),
+        priority: Priority.HIGH,
+      };
+      asyncPromises.push(
+        client.sendMessage(msg)
+          .then(res => console.log(`  ✓ Async message sent: ${res.messageId}`))
+          .catch(err => console.error(`  ✗ Error: ${err.message}`))
+      );
+    }
+    await Promise.all(asyncPromises);
+    console.log();
+
+    // 5. Statistics
+    console.log('5. Final Statistics:');
+    console.log('  ✓ All messages sent successfully');
+    console.log('  ✓ Client connected');
+
+    // 6. Cleanup
+    console.log('\n6. Cleaning up...');
+    await client.disconnect();
+    console.log('✓ Disconnected\n');
+
+    console.log('=== Example completed successfully ===');
+  } catch (error) {
+    console.error(`✗ Error occurred: ${error.message}`);
+    console.error(error.stack);
+  }
+}
+
+completeExample();
+```
+
+## API Reference
+
+### Priority Enum
+
+```typescript
+export enum Priority {
+  DEFERRED = 50,       // Low priority, can be delayed
+  NORMAL = 100,        // Standard priority (default)
+  HIGH = 150,          // Higher priority
+  URGENT = 200,        // Very high priority
+  CRITICAL = 255,      // Critical, process immediately
+}
+```
+
+### NotificationChannel Enum
+
+```typescript
+export enum NotificationChannel {
+  EMAIL = "email",           // Email delivery
+  WEBSOCKET = "websocket",   // WebSocket push
+  PUSH = "push",             // Push notifications
+  WEBHOOK = "webhook",       // Webhook callback
+}
+```
+
+### Message Interface
+
+```typescript
+export interface IMessage {
+  senderId: string;           // Sender identifier
+  recipientIds: string[];     // Recipient identifiers
+  subject: string;            // Message subject
+  content: Buffer | string;   // Message body (will be converted to Buffer)
+  priority?: Priority;        // Message priority (default: NORMAL)
+  ttlSeconds?: number;        // Time to live in seconds
+  tags?: Record<string, string>; // Custom metadata tags
+  requireConfirmation?: boolean; // Request delivery confirmation
+  timestamp?: number;         // Creation timestamp
+}
+```
+
+### DeliveryResult Interface
+
+```typescript
+export interface ISendResult {
+  messageId: string;          // Unique message identifier
+  status: 'success' | 'partial' | 'failed'; // Delivery status
+  deliveredChannels: number;  // Number of channels delivered
+  details: Record<string, any>; // Additional details
+  timestamp?: number;         // Delivery timestamp
+}
+```
+
+### Client Methods
+
+```typescript
+export class FastDataBrokerSDK {
+  // Constructor
+  constructor(host?: string, port?: number, options?: IClientOptions);
+
+  // Connection methods
+  connect(): Promise<boolean>;
+  disconnect(): Promise<void>;
+  isConnected(): boolean;
+
+  // Message sending
+  sendMessage(message: IMessage): Promise<ISendResult>;
+  sendBatch(messages: IMessage[]): Promise<ISendResult[]>;
+
+  // Messaging
+  subscribe(userId: string): EventEmitter;
+  on(event: string, listener: (...args: any[]) => void): this;
+
+  // Event methods
+  on(event: 'connected' | 'disconnected' | 'error'): void;
+}
+```
+
+### Client Configuration
+
+```typescript
+export interface IClientOptions {
+  timeout?: number;           // Timeout in milliseconds (default: 30000)
+  retries?: number;           // Number of retries (default: 3)
+  compression?: boolean;      // Enable compression (default: true)
+  encryption?: boolean;       // Enable encryption (default: false)
+  connectionPoolSize?: number; // Connection pool size (default: 10)
+  debug?: boolean;            // Enable debug logging (default: false)
+}
+```
+
+## Error Handling
+
+### Try-Catch Pattern
 
 ```javascript
 try {
   const result = await client.sendMessage(message);
-  console.log('Message sent:', result);
+  console.log('Success:', result.messageId);
 } catch (error) {
-  if (error.code === 'VALIDATION_ERROR') {
-    console.error('Invalid message:', error.message);
-  } else if (error.code === 'CONNECTION_ERROR') {
-    console.error('Connection failed:', error.message);
-  } else if (error.code === 'TIMEOUT_ERROR') {
-    console.error('Request timeout');
-  } else {
-    console.error('Unexpected error:', error);
-  }
+  console.error('Error:', error.message);
+  console.error('Code:', error.code);
 }
 ```
 
-### Batch Operations
+### Connection Validation
 
 ```javascript
-const messages = [
-  { senderId: 'user-1', recipientIds: ['user-2'], subject: 'Msg1' },
-  { senderId: 'user-1', recipientIds: ['user-3'], subject: 'Msg2' },
-  { senderId: 'user-1', recipientIds: ['user-4'], subject: 'Msg3' },
-];
-
-const results = await client.sendBatch(messages);
-results.forEach(result => console.log('Sent:', result.messageId));
+if (!client.isConnected()) {
+  await client.connect();
+}
 ```
 
-### Streaming & Events
+### Event Error Handling
 
 ```javascript
-// Subscribe to messages
-const stream = client.subscribe('user-1');
-
-stream.on('message', (message) => {
-  console.log('Received:', message.subject);
+client.on('error', (error) => {
+  console.error('Client error:', error.message);
 });
 
 stream.on('error', (error) => {
-  console.error('Stream error:', error);
+  console.error('Stream error:', error.message);
 });
-
-// Unsubscribe
-stream.unsubscribe();
 ```
 
-### WebSocket Integration
+## Advanced Features
 
-```javascript
-const wsClient = new FastDataBrokerSDK.WebSocketClient('ws://localhost:6001');
-await wsClient.connect();
-
-// Send via WebSocket
-const result = await wsClient.sendMessage(message);
-console.log('Sent via WebSocket:', result);
-
-// Listen for messages
-wsClient.on('message', (message) => {
-  console.log('Received:', message.subject);
-});
-
-await wsClient.disconnect();
-```
-
-### Clustering
-
-```javascript
-const clusterClient = new FastDataBrokerSDK.ClusterClient(
-  ['node1:6000', 'node2:6000', 'node3:6000']
-);
-await clusterClient.connect();
-
-// Automatic failover and load balancing
-const result = await clusterClient.sendMessage(message);
-console.log('Sent via cluster:', result);
-
-await clusterClient.disconnect();
-```
-
-### Promise vs Async/Await
-
-```javascript
-// Promise-based
-client.sendMessage(message)
-  .then(result => console.log('Sent:', result))
-  .catch(error => console.error('Error:', error));
-
-// Async/Await (recommended)
-async function sendMessages() {
-  try {
-    const result = await client.sendMessage(message);
-    console.log('Sent:', result);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-```
-
-## Configuration
-
-### Client Options
+### Configuration Options
 
 ```javascript
 const client = new FastDataBrokerSDK('localhost', 6000, {
-  timeout: 30000,          // Timeout in milliseconds
-  retries: 3,              // Number of retries
+  timeout: 30000,          // 30 seconds
+  retries: 3,              // 3 retries on failure
   compression: true,       // Enable compression
   encryption: true,        // Enable encryption
-  connectionPoolSize: 10,  // Connection pool size
+  connectionPoolSize: 10,  // Size of connection pool
   debug: true,             // Enable debug logging
 });
 ```
@@ -253,155 +675,156 @@ const client = new FastDataBrokerSDK('localhost', 6000, {
 client.on('connected', () => console.log('Connected'));
 client.on('disconnected', () => console.log('Disconnected'));
 client.on('error', (error) => console.error('Error:', error));
-client.on('message:sent', (result) => console.log('Message sent:', result));
-client.on('message:failed', (error) => console.error('Send failed:', error));
+client.on('message:sent', (result) => console.log('Sent:', result));
+client.on('message:failed', (error) => console.error('Failed:', error));
 ```
 
-## API Reference
+### Batch Processing with Concurrency
 
-### Message Interface
+```javascript
+const messages = [/* ... */];
+const batchSize = 10;
 
-```typescript
-interface IMessage {
-  messageId?: string;           // Unique identifier
-  senderId: string;             // Sender ID
-  recipientIds: string[];       // List of recipients
-  subject: string;              // Message subject
-  content: Buffer | string;     // Message body
-  priority?: Priority;          // Priority level
-  ttlSeconds?: number;          // Time to live
-  tags?: Record<string, string>;// Custom tags
-  requireConfirmation?: boolean;// Request confirmation
-  timestamp?: number;           // Creation timestamp
+for (let i = 0; i < messages.length; i += batchSize) {
+  const batch = messages.slice(i, i + batchSize);
+  const results = await Promise.all(
+    batch.map(msg => client.sendMessage(msg))
+  );
+  results.forEach(r => console.log(`Sent: ${r.messageId}`));
 }
 ```
 
-### Client Methods
+### Retry Logic
 
-#### connect
-Connect to FastDataBroker.
 ```javascript
-await client.connect();
+async function sendWithRetry(message, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await client.sendMessage(message);
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
 ```
-
-#### disconnect
-Disconnect from FastDataBroker.
-```javascript
-await client.disconnect();
-```
-
-#### sendMessage
-Send a single message.
-```javascript
-const result = await client.sendMessage(message);
-// Returns: { messageId, status, timestamp }
-```
-
-#### sendBatch
-Send multiple messages.
-```javascript
-const results = await client.sendBatch(messages);
-// Returns: Array of send results
-```
-
-#### subscribe
-Subscribe to user messages.
-```javascript
-const stream = client.subscribe(userId);
-stream.on('message', (msg) => {});
-```
-
-#### getMessageStatus
-Get message delivery status.
-```javascript
-const status = await client.getMessageStatus(messageId);
-```
-
-#### waitForConfirmation
-Wait for message confirmation.
-```javascript
-const confirmation = await client.waitForConfirmation(messageId, 5000);
-```
-
-## Examples
-
-- [Basic Example](examples/basic.ts)
-- [Async/Await](examples/async-await.ts)
-- [WebSocket Example](examples/websocket.ts)
-- [Batch Operations](examples/batch.ts)
-- [Clustering](examples/clustering.ts)
-- [Error Handling](examples/error-handling.ts)
-- [React Integration](examples/react-integration.tsx)
-- [Node.js Stream Example](examples/stream.js)
-
-## Error Codes
-
-- **1000**: Connection error
-- **1001**: Validation error
-- **1002**: Timeout error
-- **1003**: Message not found
-- **1004**: Authentication failed
-- **1005**: Rate limit exceeded
 
 ## Testing
 
+### Run Tests (Node.js)
+
 ```bash
-npm test                    # Run all tests
-npm run test:watch         # Run tests in watch mode
-npm run test:coverage      # Generate coverage report
-npm run benchmark          # Run performance benchmarks
+cd sdks/javascript
+npm test
+npm test -- --coverage  # With coverage
 ```
 
-## Benchmarks
+### Unit Test Example (Jest)
 
-Performance on Node.js v18+:
+```javascript
+import { FastDataBrokerSDK, Priority } from '@fastdatabroker/sdk';
 
-| Operation | Throughput | Latency |
-|-----------|-----------|---------|
-| Send Message | 75k msgs/sec | <2ms |
-| Batch Send (100) | 180k msgs/sec | <150ms |
-| WebSocket | 35k msgs/sec | <5ms |
+describe('FastDataBrokerSDK', () => {
+  let client;
 
-## Browser Support
+  beforeEach(() => {
+    client = new FastDataBrokerSDK('localhost', 6000);
+  });
 
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+  afterEach(async () => {
+    if (client.isConnected()) {
+      await client.disconnect();
+    }
+  });
 
-## Node.js Support
+  test('should send message successfully', async () => {
+    await client.connect();
 
-- Node.js 16.x
-- Node.js 18.x
-- Node.js 20.x
+    const message = {
+      senderId: 'test',
+      recipientIds: ['test-recipient'],
+      subject: 'Test',
+      content: Buffer.from('Test content'),
+      priority: Priority.HIGH,
+    };
 
-## Contributing
+    const result = await client.sendMessage(message);
+    expect(result.messageId).toBeDefined();
+    expect(result.status).toBe('success');
+  });
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+  test('should connect and disconnect', async () => {
+    await client.connect();
+    expect(client.isConnected()).toBe(true);
+
+    await client.disconnect();
+    expect(client.isConnected()).toBe(false);
+  });
+});
+```
+
+## Requirements
+
+- Node.js 14.0 or higher
+- Browser with ES2017 support
+
+## Building and Publishing
+
+### Build
+
+```bash
+npm run build
+npm run build:prod  # Production build
+```
+
+### Run Tests
+
+```bash
+npm test
+npm test -- --coverage
+```
+
+## Publishing to NPM
+
+```bash
+npm version patch|minor|major
+npm publish
+```
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - See LICENSE file in the repository
 
 ## Support
 
-- 📖 [Documentation](https://github.com/suraj202923/FastDataBroker)
-- 🐛 [Issue Tracker](https://github.com/suraj202923/FastDataBroker/issues)
-- 💬 [Discussions](https://github.com/suraj202923/FastDataBroker/discussions)
+- GitHub Issues: https://github.com/suraj202923/FastDataBroker/issues
+- Documentation: https://github.com/suraj202923/FastDataBroker/tree/main/docs
+- FastDataBroker Docs: https://fastdatabroker.io/docs
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
 ## Changelog
 
+### Version 0.1.13 (Latest)
+- Enhanced documentation with 8 complete examples
+- WebSocket streaming integration
+- Event emitter support
+- Comprehensive error handling
+- TypeScript full support with interfaces
+- Advanced configuration options
+- Batch processing patterns
+- Retry logic patterns
+
 ### Version 0.1.12
-- Initial SDK release (v0.1.12)
-- TypeScript support with full type definitions
-- Synchronous and asynchronous message sending
-- Multi-channel delivery support
-- WebSocket integration
-- Event emitter pattern
-- Clustering and failover support
-- Batch operations
-- Promise/async-await support
+- Initial JavaScript/TypeScript SDK release
+- Promise-based async APIs with async/await
+- Priority-based message routing
+- TTL and tagging support
+- QUIC protocol integration
