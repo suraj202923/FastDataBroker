@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "fastdatabroker"
 version = "0.1.14"
 description = "FastDataBroker - High-performance distributed message queue with multi-region clustering and QUIC protocol support"
-requires-python = ">="3.8"
+requires-python = ">=3.8"
 authors = [
     { name = "Suraj Kalbande", email = "suraj202923@gmail.com" },
 ]
