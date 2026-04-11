@@ -3,34 +3,40 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "rst-queue"
+name = "fastdatabroker"
 version = "0.1.14"
-description = "High-performance async queue system built with Rust and Crossbeam"
-requires-python = ">=3.8"
+description = "FastDataBroker - High-performance distributed message queue with multi-region clustering and QUIC protocol support"
+requires-python = ">="3.8"
 authors = [
     { name = "Suraj Kalbande", email = "suraj202923@gmail.com" },
 ]
 readme = "README.md"
-keywords = ["queue", "async", "crossbeam", "concurrent"]
+license = { text = "MIT" }
+keywords = ["fastdatabroker", "message-queue", "messaging", "notifications", "distribute", "async", "quic"]
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Rust",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: System :: Operating System Kernels",
+    "Topic :: Communications",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking",
 ]
 
 [project.urls]
-Homepage = "https://github.com/suraj202923/rst_queue"
-Repository = "https://github.com/suraj202923/rst_queue"
+Homepage = "https://github.com/suraj202923/FastDataBroker"
+Repository = "https://github.com/suraj202923/FastDataBroker"
+Documentation = "https://github.com/suraj202923/FastDataBroker#documentation"
+"Bug Tracker" = "https://github.com/suraj202923/FastDataBroker/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "maturin>=1.0"]
