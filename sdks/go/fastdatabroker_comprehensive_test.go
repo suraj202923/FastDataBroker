@@ -799,8 +799,8 @@ func TestMemoryUsage(t *testing.T) {
 		QuicPort: 6000,
 	}
 
-	if client == nil {
-		t.Error("Client should allocate")
+	if client.QuicHost != "localhost" || client.QuicPort != 6000 {
+		t.Error("Client should initialize with expected configuration")
 	}
 }
 
