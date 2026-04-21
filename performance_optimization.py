@@ -30,7 +30,7 @@ class PerformanceOptimizer:
         try:
             resp = requests.get(f"{self.base_url}/health", timeout=2)
             return resp.status_code == 200
-        except:
+        except Exception:
             return False
     
     def benchmark_endpoint(self, method: str, endpoint: str, 
@@ -145,7 +145,7 @@ class PerformanceOptimizer:
                 for future in as_completed(futures):
                     try:
                         future.result()
-                    except:
+                    except Exception:
                         pass
                 
                 time.sleep(0.1)

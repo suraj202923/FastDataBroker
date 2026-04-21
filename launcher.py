@@ -49,7 +49,7 @@ def start_dashboard():
         try:
             webbrowser.open("http://localhost:8080")
             print("✓ Opened browser automatically")
-        except:
+        except Exception:
             print("  (Manual: http://localhost:8080)")
         
         return proc
