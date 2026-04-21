@@ -242,7 +242,17 @@ export class Client {
     this.port = port;
     this.tenantId = '';
     this.apiKey = '';
-    this.settings = { app: {}, server: {}, tenants: [] } as AppSettings;
+    this.settings = {
+      app: { name: 'FastDataBroker', version: '0.1.16', environment: 'development' },
+      server: {
+        bind_address: '0.0.0.0',
+        port: 6379,
+        enable_tls: false,
+        cert_path: './certs/cert.pem',
+        key_path: './certs/key.pem'
+      },
+      tenants: []
+    };
     this.wsClients = new Map();
   }
 

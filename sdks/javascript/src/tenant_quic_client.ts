@@ -160,7 +160,7 @@ export class TenantQuicClient {
       this.connectionId = this.generateConnectionId(handshakeParams);
 
       // Handshake complete
-      this.handshakeDurationMs = Date.now() - this.handshakeStartTime;
+      this.handshakeDurationMs = Math.max(1, Date.now() - this.handshakeStartTime);
       this.isAuthenticated = true;
 
       return true;

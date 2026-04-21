@@ -2,7 +2,7 @@
  * FastDataBroker JavaScript SDK - Tenant-Specific QUIC Tests
  */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import TenantQuicClient, { 
   ConnectionState, 
   TenantRole, 
