@@ -1,0 +1,28 @@
+{
+  "name": "fastdatabroker-admin-dashboard",
+  "version": "1.0.0",
+  "description": "FastDataBroker Admin Dashboard with Web UI and API Access",
+  "main": "dashboard-server.js",
+  "scripts": {
+    "start": "node dashboard-server.js",
+    "dev": "nodemon dashboard-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "fastdatabroker",
+    "admin",
+    "dashboard",
+    "web-ui",
+    "api"
+  ],
+  "author": "FastDataBroker",
+  "license": "LicenseRef-FDB-DevTest-Only",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

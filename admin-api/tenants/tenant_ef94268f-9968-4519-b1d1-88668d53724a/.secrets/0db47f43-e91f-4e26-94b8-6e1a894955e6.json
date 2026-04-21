@@ -1,0 +1,8 @@
+{
+  "secret_id": "0db47f43-e91f-4e26-94b8-6e1a894955e6",
+  "tenant_id": "tenant_ef94268f-9968-4519-b1d1-88668d53724a",
+  "secret_key": "database_password",
+  "secret_value": "super_secret_password_123",
+  "created_at": "2026-04-12T19:13:06.743632300+00:00",
+  "updated_at": "2026-04-12T19:13:06.743632300+00:00"
+}

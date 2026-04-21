@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # ZooKeeper Cluster (Metadata store)
+  zookeeper-1:
+    image: zookeeper:latest
+    container_name: zk1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_CFG_EXTRA: "server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888"
+    networks:
+      - fdb-cluster
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  zookeeper-2:
+    image: zookeeper:latest
+    container_name: zk2
+    ports:
+      - "2182:2181"
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_CFG_EXTRA: "server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888"
+    networks:
+      - fdb-cluster
+    depends_on:
+      zookeeper-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  zookeeper-3:
+    image: zookeeper:latest
+    container_name: zk3
+    ports:
+      - "2183:2181"
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_CFG_EXTRA: "server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888"
+    networks:
+      - fdb-cluster
+    depends_on:
+      zookeeper-2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # FastDataBroker Cluster (3 brokers)
+  broker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: broker-1
+    ports:
+      - "5001:5000"
+    environment:
+      BROKER_ID: 1
+      LISTEN_ADDRESS: broker-1
+      LISTEN_PORT: 5000
+      METADATA_SERVERS: zk1:2181,zk2:2181,zk3:2181
+      BOOTSTRAP_SERVERS: broker-1:5000,broker-2:5000,broker-3:5000
+    networks:
+      - fdb-cluster
+    depends_on:
+      zookeeper-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - broker1-data:/var/lib/fastdatabroker
+
+  broker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: broker-2
+    ports:
+      - "5002:5000"
+    environment:
+      BROKER_ID: 2
+      LISTEN_ADDRESS: broker-2
+      LISTEN_PORT: 5000
+      METADATA_SERVERS: zk1:2181,zk2:2181,zk3:2181
+      BOOTSTRAP_SERVERS: broker-1:5000,broker-2:5000,broker-3:5000
+    networks:
+      - fdb-cluster
+    depends_on:
+      broker-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - broker2-data:/var/lib/fastdatabroker
+
+  broker-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: broker-3
+    ports:
+      - "5003:5000"
+    environment:
+      BROKER_ID: 3
+      LISTEN_ADDRESS: broker-3
+      LISTEN_PORT: 5000
+      METADATA_SERVERS: zk1:2181,zk2:2181,zk3:2181
+      BOOTSTRAP_SERVERS: broker-1:5000,broker-2:5000,broker-3:5000
+    networks:
+      - fdb-cluster
+    depends_on:
+      broker-2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - broker3-data:/var/lib/fastdatabroker
+
+  # HAProxy Load Balancer (Optional)
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - fdb-cluster
+    depends_on:
+      broker-3:
+        condition: service_healthy
+
+  # Monitoring (Prometheus + Grafana)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - fdb-cluster
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - fdb-cluster
+    depends_on:
+      - prometheus
+
+networks:
+  fdb-cluster:
+    driver: bridge
+
+volumes:
+  broker1-data:
+  broker2-data:
+  broker3-data:
+  prometheus-data:
+  grafana-data:

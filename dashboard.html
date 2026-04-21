@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="FastDataBroker Admin Dashboard">
+    <meta name="theme-color" content="#ff8c00">
+    <title>FastDataBroker Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="datarnlogo.png">
+    <link rel="shortcut icon" type="image/png" href="datarnlogo.png">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+    <!-- ===== LOGIN PAGE ===== -->
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <img src="datarnlogo.png" alt="FastDataBroker Logo" class="login-logo">
+                <h1>FastDataBroker</h1>
+                <p>Admin Dashboard v1.0</p>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+            <div style="text-align: center; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(37, 99, 235, 0.1); border-radius: 0.5rem;">
+                🔒 Server: <strong>This Instance</strong>
+            </div>
+            <form id="loginForm" method="post" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="admin" value="admin" required tabindex="1" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="password" value="password" required tabindex="2">
+                </div>
+                <button type="submit" class="login-btn" tabindex="3">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="datarnlogo.png" alt="Logo" class="sidebar-logo">
+                <h2>FastDataBroker</h2>
+                <p class="sidebar-version">v1.0</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-page="dashboard" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: linear-gradient(135deg, #ff0040, #00ffff); color: #0d0221;">◆</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" data-page="brokers" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #ff0040; color: white;">■</span>
+                    <span>Brokers</span>
+                </div>
+                <div class="nav-item" data-page="clusters" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #00ffff; color: #0d0221;">●</span>
+                    <span>Clusters</span>
+                </div>
+                <div class="nav-item" data-page="streams" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #39ff14; color: #0d0221;">▲</span>
+                    <span>Streams</span>
+                </div>
+                <div class="nav-item" data-page="queue-actions" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #ff6600; color: white;">☷</span>
+                    <span>Queues</span>
+                </div>
+                <div class="nav-item" data-page="tenants" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: linear-gradient(135deg, #00ffff, #39ff14); color: #0d0221;">♦</span>
+                    <span>Tenants</span>
+                </div>
+                <div class="nav-item" data-page="secrets" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #ff0040; color: white;">★</span>
+                    <span>API Keys</span>
+                </div>
+                <div class="nav-item" data-page="settings" role="tab" tabindex="0">
+                    <span class="nav-icon" style="background: #00ffff; color: #0d0221;">⚡</span>
+                    <span>Settings</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div class="user-details">
+                        <span id="userInfo" class="user-name">Admin User</span>
+                        <span class="user-status">Online</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-small" id="restartBtn" title="Restart FastDataBroker" onclick="restartFastDataBroker()" style="background: linear-gradient(135deg, #ff6600, #ff8800); border-color: #00ffff;">↻ Restart</button>
+                        <button class="btn btn-small" id="stopBtn" title="Stop FastDataBroker" onclick="stopFastDataBroker()" style="background: linear-gradient(135deg, #ff0040, #ff006e); border-color: #39ff14;">⊘ Stop</button>
+                        <button class="btn btn-small logout-btn" id="logoutBtn" title="Logout" onclick="handleLogout()" tabindex="0" style="background: linear-gradient(135deg, #ff0040, #00ffff); border-color: #39ff14;">⤾ Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== DASHBOARD SECTION ===== -->
+            <div class="section active" data-section="dashboard">
+                <div class="section-title">Overview</div>
+                <div class="grid">
+                    <div class="stat-card" id="total-brokers"></div>
+                    <div class="stat-card" id="active-clusters"></div>
+                    <div class="stat-card" id="active-streams"></div>
+                    <div class="stat-card" id="throughput"></div>
+                </div>
+
+                <div style="background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem;">
+                    <h3>System Health</h3>
+                    <div class="chart-container">
+                        <div class="chart-bar" style="height: 45%;"><div class="chart-label">Mon</div></div>
+                        <div class="chart-bar" style="height: 60%;"><div class="chart-label">Tue</div></div>
+                        <div class="chart-bar" style="height: 52%;"><div class="chart-label">Wed</div></div>
+                        <div class="chart-bar" style="height: 78%;"><div class="chart-label">Thu</div></div>
+                        <div class="chart-bar" style="height: 88%;"><div class="chart-label">Fri</div></div>
+                        <div class="chart-bar" style="height: 70%;"><div class="chart-label">Sat</div></div>
+                        <div class="chart-bar" style="height: 55%;"><div class="chart-label">Sun</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== BROKERS SECTION ===== -->
+            <div class="section" data-section="brokers">
+                <div class="section-title">Brokers Management</div>
+                <div class="table-wrapper">
+                    <table id="brokersTable">
+                        <thead>
+                            <tr>
+                                <th>Broker ID</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>CPU</th>
+                                <th>Memory</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2rem;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== CLUSTERS SECTION ===== -->
+            <div class="section" data-section="clusters">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="section-title">Clusters Management</h3>
+                    <button class="btn btn-warning" onclick="openRebalanceClusterModal()" title="Rebalance partitions across brokers">⚖️ Rebalance Cluster</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="clustersTable">
+                        <thead>
+                            <tr>
+                                <th>Cluster Name</th>
+                                <th>Brokers</th>
+                                <th>Nodes</th>
+                                <th>Status</th>
+                                <th>Avg Latency</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2rem;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== STREAMS SECTION ===== -->
+            <div class="section" data-section="streams">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="section-title">Streams Management</h3>
+                    <button class="btn btn-primary" onclick="openCreateStreamModal()">➕ Create New Stream</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="streamsTable">
+                        <thead>
+                            <tr>
+                                <th>Stream Name</th>
+                                <th>Partitions</th>
+                                <th>Messages</th>
+                                <th>Retention</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2rem;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== QUEUE ACTIONS SECTION ===== -->
+            <div class="section" data-section="queue-actions">
+                <div class="section-title">Queue Management</div>
+                <div class="table-wrapper">
+                    <table id="queuesTable">
+                        <thead>
+                            <tr>
+                                <th>Queue Name</th>
+                                <th>Depth</th>
+                                <th>Rate (msgs/sec)</th>
+                                <th>Avg Latency (ms)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2rem;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TENANTS SECTION ===== -->
+            <div class="section" data-section="tenants">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="section-title">Tenant Management</h3>
+                    <button class="btn btn-primary" onclick="openTenantRegistrationModal()">➕ Register New Tenant</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="tenantsTable">
+                        <thead>
+                            <tr>
+                                <th>Tenant ID</th>
+                                <th>Tenant Name</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>API Keys</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2rem;">Loading tenants...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== API KEYS / SECRETS SECTION ===== -->
+            <div class="section" data-section="secrets">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="section-title">API Keys & Secrets</h3>
+                    <button class="btn btn-primary" onclick="generateNewSecret()">🔄 Generate New Key</button>
+                </div>
+                <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem;">
+                    <p style="margin-bottom: 1rem; color: var(--text-muted);">📋 Select a tenant to view and manage their API keys and secrets below:</p>
+                    <select id="secretTenantFilter" style="width: 100%; max-width: 300px; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);" onchange="filterSecretsByTenant()">
+                        <option value="">All Tenants</option>
+                    </select>
+                </div>
+                <div class="table-wrapper">
+                    <table id="secretsTable">
+                        <thead>
+                            <tr>
+                                <th>Key Name</th>
+                                <th>Tenant</th>
+                                <th>Secret Value</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center" style="padding: 2rem;">No API keys found. Create a tenant first.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== SETTINGS SECTION ===== -->
+            <div class="section" data-section="settings">
+                <div class="section-title">⚙️ System Settings</div>
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-panel="general">General</button>
+                    <button class="settings-tab" data-panel="health">Health & Metrics</button>
+                    <button class="settings-tab" data-panel="backup">Backup</button>
+                    <button class="settings-tab" data-panel="about">About</button>
+                    <button class="settings-tab" data-panel="quic">QUIC</button>
+                </div>
+
+                <!-- General Settings Panel -->
+                <div class="settings-panel active" data-panel-content="general">
+                    <div class="card">
+                        <h3>🌐 Dashboard Configuration</h3>
+                        <form id="generalSettingsForm">
+                            <div class="form-group">
+                                <label for="refreshRate">Dashboard Refresh Rate (seconds)</label>
+                                <input type="number" id="refreshRate" placeholder="5" value="5" min="1" max="60">
+                                <small>How often to refresh broker, stream, and queue data</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="logLevel">Log Level</label>
+                                <select id="logLevel">
+                                    <option value="debug">Debug - Show all events</option>
+                                    <option value="info" selected>Info - Important events</option>
+                                    <option value="warn">Warning - Only warnings</option>
+                                    <option value="error">Error - Only errors</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveGeneralSettings()">💾 Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Health & Metrics Panel -->
+                <div class="settings-panel" data-panel-content="health">
+                    <div class="card">
+                        <h3>� Broker Health & Metrics</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Real-time health status and performance metrics from FastDataBroker</p>
+                        <div id="healthStatus" style="padding: 1.5rem; background: var(--card); border-radius: 0.375rem; margin-bottom: 1.5rem;">
+                            <div style="margin-bottom: 1rem;">
+                                <p><strong>Overall Health:</strong> <span id="overallHealth" class="badge badge-success">✓ Healthy</span></p>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <p><strong>Broker Status:</strong> <span id="brokerStatus" class="badge badge-success">All Online</span></p>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <p><strong>Average Latency:</strong> <span id="avgLatency" style="font-weight: 600; color: var(--primary);">--ms</span></p>
+                            </div>
+                            <div>
+                                <p><strong>Throughput:</strong> <span id="throughputMetric" style="font-weight: 600; color: var(--secondary);">-- msg/s</span></p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="loadHealthMetrics()">🔄 Refresh Metrics</button>
+                    </div>
+                </div>
+
+                <!-- Backup & Restore Panel -->
+                <div class="settings-panel" data-panel-content="backup">
+                    <div class="card">
+                        <h3>💾 Backup & Restore</h3>
+                        <div class="settings-group">
+                            <h4>Backup Configuration</h4>
+                            <p style="color: var(--text-muted); margin-bottom: 1rem;">Download current system and tenant configuration</p>
+                            <button class="btn btn-success" onclick="exportBackup()">📥 Export Backup</button>
+                        </div>
+                        <div class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <h4>Restore Configuration</h4>
+                            <p style="color: var(--text-muted); margin-bottom: 1rem;">Upload a previously exported backup file</p>
+                            <form id="restoreForm" onsubmit="importBackup(event)">
+                                <div class="form-group">
+                                    <input type="file" id="backupFile" accept=".json,.bak" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">📤 Restore from Backup</button>
+                            </form>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-left: 3px solid var(--danger); border-radius: 0.375rem;">
+                            <h4>⚠️ Danger Zone</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Permanently delete all data. This action cannot be undone.</p>
+                            <button type="button" class="btn btn-danger" onclick="resetSystem()" style="opacity: 0.8;">🗑️ Reset System to Defaults</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Panel -->
+                <div class="settings-panel" data-panel-content="about">
+                    <div class="card">
+                        <h3>ℹ️ About FastDataBroker</h3>
+                        <div style="padding: 1.5rem; text-align: center;">
+                            <h2 style="font-size: 3rem; margin-bottom: 0.5rem;">⚡</h2>
+                            <h2 style="margin-bottom: 0.5rem;">FastDataBroker Admin Dashboard</h2>
+                            <p><strong>Version:</strong> 1.0</p>
+                            <p><strong>Build Date:</strong> April 2026</p>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-radius: 0.375rem;">
+                            <h4>System Information</h4>
+                            <p><strong>Dashboard Status:</strong> <span class="badge-success">✓ Running</span></p>
+                            <p><strong>Database:</strong> Encrypted Local Files (AES-256-GCM)</p>
+                            <p><strong>SSL/TLS:</strong> <span class="badge-danger">Not Configured</span></p>
+                            <p><strong>Uptime:</strong> <span id="systemUptime">calculating...</span></p>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-radius: 0.375rem;">
+                            <h4>📚 Documentation</h4>
+                            <p><a href="#" style="color: var(--primary);">View API Documentation</a></p>
+                            <p><a href="#" style="color: var(--primary);">View Deployment Guide</a></p>
+                            <p><a href="#" style="color: var(--primary);">Report an Issue</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUIC Protocol Panel -->
+                <div class="settings-panel" data-panel-content="quic">
+                    <div class="card">
+                        <h3>🚀 QUIC Protocol Status</h3>
+                        <div style="padding: 1.5rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 0.375rem; color: white;">
+                            <h2 style="margin-bottom: 0.5rem;">QUIC Protocol Active</h2>
+                            <p>High-performance protocol with Pre-Shared Key (PSK) Authentication</p>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-radius: 0.375rem;">
+                            <h4>Protocol Configuration</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <strong>Protocol:</strong> QUIC 1.0 (RFC 9000)
+                                </div>
+                                <div>
+                                    <strong>Authentication:</strong> TLS 1.3 PSK
+                                </div>
+                                <div>
+                                    <strong>Server Port:</strong> 9092-9094
+                                </div>
+                                <div>
+                                    <strong>Max Streams:</strong> 100 per connection
+                                </div>
+                                <div>
+                                    <strong>Idle Timeout:</strong> 30 seconds
+                                </div>
+                                <div>
+                                    <strong>Connection Encryption:</strong> AES-256-GCM
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-radius: 0.375rem;">
+                            <h4>PSK Authentication Statistics</h4>
+                            <div id="quicStats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <div style="font-size: 2rem; color: var(--secondary);" id="activePsks">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.875rem;">Active PSKs</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 2rem; color: var(--success);" id="totalValidations">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.875rem;">Successful Auth</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 2rem; color: var(--primary);" id="activeConnections">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.875rem;">Active Connections</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 2rem; color: #ff6b6b;" id="authFailures">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.875rem;">Auth Failures</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card); border-radius: 0.375rem;">
+                            <h4>Performance Metrics</h4>
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td><strong>Handshake Time (1-RTT):</strong></td>
+                                    <td>5-10ms</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PSK Verification:</strong></td>
+                                    <td>&lt; 1ms (SHA-256 hash)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max Throughput:</strong></td>
+                                    <td>1.5M - 2M msg/sec per broker</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Multiplexing Overhead:</strong></td>
+                                    <td>&lt; 10%</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-primary" onclick="loadQuicStatus()" style="width: 100%;">🔄 Refresh QUIC Status</button>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <!-- Content will be injected by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Tenant Registration Modal -->
+    <div id="tenantRegistrationModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeModal('tenantRegistrationModal')">&times;</span>
+            <div class="modal-header">🏢 Register New Tenant</div>
+            <form onsubmit="submitTenantRegistration(event)">
+                <div class="form-group">
+                    <label for="tenantName">Tenant Name</label>
+                    <input type="text" id="tenantName" placeholder="e.g., Acme Corporation" required>
+                </div>
+                <div class="form-group">
+                    <label for="tenantEmail">Contact Email</label>
+                    <input type="email" id="tenantEmail" placeholder="contact@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="tenantTier">Subscription Tier</label>
+                    <select id="tenantTier" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);" required>
+                        <option value="">Select a tier</option>
+                        <option value="starter">Starter - 1K msgs/sec</option>
+                        <option value="pro">Pro - 10K msgs/sec</option>
+                        <option value="enterprise">Enterprise - Unlimited</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maxConnections">Max Concurrent Connections</label>
+                    <input type="number" id="maxConnections" placeholder="100" value="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="maxMessageSize">Max Message Size (KB)</label>
+                    <input type="number" id="maxMessageSize" placeholder="1024" value="1024" required>
+                </div>
+                <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg); border-radius: 0.375rem; border-left: 3px solid var(--primary);">
+                    <strong>✓ Auto-Features Enabled:</strong>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        • Automatic secret generation<br>
+                        • API key creation<br>
+                        • Client credentials setup
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1; background: var(--secondary);">✓ Register & Generate Secrets</button>
+                    <button type="button" class="btn btn-primary" style="flex: 1; background: var(--border); color: var(--text);" onclick="closeModal('tenantRegistrationModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generated Secrets Modal -->
+    <div id="generatedSecretsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="modal-close" onclick="closeModal('generatedSecretsModal')">&times;</span>
+            <div class="modal-header">🔑 Generated Credentials for Tenant</div>
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="color: #fca5a5; font-weight: 500;">⚠️ Important: Save these credentials securely. You won't be able to see them again!</p>
+            </div>
+
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">TENANT ID</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <code id="secretTenantId" style="flex: 1; background: var(--card); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: monospace; word-break: break-all;">tenant_xxx</code>
+                        <button type="button" class="btn btn-primary btn-small" onclick="copyToClipboard('secretTenantId')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">API KEY</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <code id="secretApiKey" style="flex: 1; background: var(--card); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: monospace; word-break: break-all;">fdb_key_xxx</code>
+                        <button type="button" class="btn btn-primary btn-small" onclick="copyToClipboard('secretApiKey')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">API SECRET</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                        <code id="secretApiSecret" style="flex: 1; background: var(--card); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: monospace; word-break: break-all;">fdb_secret_xxx</code>
+                        <button type="button" class="btn btn-primary btn-small" onclick="copyToClipboard('secretApiSecret')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">BROKER ENDPOINT</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <code id="secretEndpoint" style="flex: 1; background: var(--card); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: monospace; word-break: break-all;">localhost:9092</code>
+                        <button type="button" class="btn btn-primary btn-small" onclick="copyToClipboard('secretEndpoint')">📋 Copy</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">CONNECTION STRING</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <code id="secretConnectionString" style="flex: 1; background: var(--card); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: monospace; word-break: break-all; white-space: pre-wrap;">fdb://api_key:api_secret@localhost:9092</code>
+                        <button type="button" class="btn btn-primary btn-small" onclick="copyToClipboard('secretConnectionString')">📋 Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">📝 Usage Example:</h4>
+                <pre style="background: var(--card); padding: 1rem; border-radius: 0.375rem; overflow-x: auto; color: #6ee7b7; font-size: 0.85rem;">// Python
+from fastdatabroker import Client
+client = Client(
+    api_key='&lt;key&gt;',
+    api_secret='&lt;secret&gt;',
+    broker_endpoint='localhost:9092'
+)
+
+// JavaScript/Node.js
+const client = new FastDataBroker({
+    apiKey: '&lt;key&gt;',
+    apiSecret: '&lt;secret&gt;',
+    brokerEndpoint: 'localhost:9092'
+})</pre>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-success" style="flex: 1; background: var(--secondary);" onclick="downloadCredentials()">📥 Download as JSON</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('generatedSecretsModal')">✓ Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACTION MODALS ===== -->
+
+    <!-- Create Stream Modal -->
+    <div id="createStreamModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeModal('createStreamModal')">&times;</span>
+            <div class="modal-header">📦 Create New Stream</div>
+            <form onsubmit="submitCreateStream(event)">
+                <div class="form-group">
+                    <label for="streamName">Stream Name *</label>
+                    <input type="text" id="streamName" placeholder="e.g., orders, transactions" required>
+                </div>
+                <div class="form-group">
+                    <label for="streamPartitions">Number of Partitions</label>
+                    <input type="number" id="streamPartitions" placeholder="3" value="3" min="1" max="128" required>
+                </div>
+                <div class="form-group">
+                    <label for="streamReplicas">Replication Factor</label>
+                    <input type="number" id="streamReplicas" placeholder="3" value="3" min="1" max="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="streamRetention">Retention Policy</label>
+                    <select id="streamRetention" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);">
+                        <option value="1 day">1 day</option>
+                        <option value="7 days" selected>7 days</option>
+                        <option value="30 days">30 days</option>
+                        <option value="90 days">90 days</option>
+                        <option value="unlimited">Unlimited</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1; background: var(--secondary);">✓ Create Stream</button>
+                    <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('createStreamModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Broker Restart Modal -->
+    <div id="brokerRestartModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeModal('brokerRestartModal')">&times;</span>
+            <div class="modal-header">🔄 Restart Broker</div>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="color: #fbbf24; font-weight: 500;">⚠️ Restarting a broker will temporarily disconnect active clients.</p>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <p><strong>Broker ID:</strong> <code id="restartBrokerId" style="background: var(--card); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">broker-1</code></p>
+                <p style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted);">Estimated restart time: 30-60 seconds</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-warning" style="flex: 1;" onclick="confirmBrokerRestart()">🔄 Confirm Restart</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('brokerRestartModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broker Pause Modal -->
+    <div id="brokerPauseModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeModal('brokerPauseModal')">&times;</span>
+            <div class="modal-header">⏸️ Pause Broker</div>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="color: #fbbf24; font-weight: 500;">⚠️ Pausing a broker will reject new connections and stop accepting messages.</p>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <p><strong>Broker ID:</strong> <code id="pauseBrokerId" style="background: var(--card); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">broker-1</code></p>
+                <p style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted);">Existing connections will remain active until timeout or manual disconnect.</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-warning" style="flex: 1;" onclick="confirmBrokerPause()">⏸️ Confirm Pause</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('brokerPauseModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Action Modal -->
+    <div id="queueActionModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeModal('queueActionModal')">&times;</span>
+            <div class="modal-header" id="queueActionTitle">Queue Action</div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <p><strong>Queue Name:</strong> <code id="queueActionName" style="background: var(--card); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">queue-name</code></p>
+                <p style="margin-top: 0.75rem;"><strong>Action:</strong> <code id="queueActionType" style="background: var(--card); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">pause</code></p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);" id="queueActionDescription"></p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-warning" style="flex: 1;" onclick="confirmQueueAction()">✓ Confirm Action</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('queueActionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster Rebalance Modal -->
+    <div id="rebalanceClusterModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeModal('rebalanceClusterModal')">&times;</span>
+            <div class="modal-header">⚖️ Rebalance Cluster</div>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="color: #fbbf24; font-weight: 500;">⚠️ Rebalancing will redistribute partitions across brokers. This may cause temporary performance impact.</p>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <p style="margin-bottom: 1rem;"><strong>Cluster Information:</strong></p>
+                <p>• Total Brokers: <strong id="rebalanceBrokerCount">3</strong></p>
+                <p>• Partitions to Move: <strong id="rebalancePartitionCount">24</strong></p>
+                <p>• Estimated Time: <strong>2-5 minutes</strong></p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">Progress can be monitored in the Clusters view after rebalancing starts.</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-warning" style="flex: 1;" onclick="confirmRebalanceCluster()">⚖️ Start Rebalancing</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="closeModal('rebalanceClusterModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

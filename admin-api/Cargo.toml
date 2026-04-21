@@ -1,0 +1,58 @@
+[package]
+name = "fastdatabroker-admin-api"
+version = "0.1.0"
+edition = "2021"
+authors = ["Suraj Kalbande <suraj202923@gmail.com>"]
+description = "FastDataBroker Admin API - Lightweight management and configuration service"
+
+[[bin]]
+name = "admin-api"
+path = "src/main.rs"
+
+[dependencies]
+# Web framework
+actix-web = "4.4"
+actix-rt = "2.9"
+actix-files = "0.6"
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# UUID
+uuid = { version = "1.7", features = ["v4", "serde"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# HTTP client for communicating with broker
+reqwest = { version = "0.11", features = ["json"] }
+
+# Validation
+validator = { version = "0.16", features = ["derive"] }
+
+# Future utilities
+futures = "0.3"
+
+# Metrics
+prometheus = "0.13"
+
+# Authentication
+actix-cors = "0.7"
+base64 = "0.21"
+sha2 = "0.10"
+
+# In-memory caching
+lru = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"

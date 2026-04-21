@@ -1,0 +1,13 @@
+{
+  "tenant_id": "tenant_3ca9a647-84a4-48fa-827c-4d535e7d7692",
+  "name": "Fixed Test Corp",
+  "email": "test@fixed.com",
+  "api_key": "ef3e8a09-4ac0-49df-b045-6e43152b6137",
+  "status": "active",
+  "max_message_size": 10485760,
+  "rate_limit_rps": 1000,
+  "max_connections": 100,
+  "retention_days": 30,
+  "created_at": "2026-04-13T04:49:21.968447900+00:00",
+  "updated_at": "2026-04-13T04:49:21.968447900+00:00"
+}

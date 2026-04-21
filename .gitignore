@@ -34,6 +34,11 @@ ENV/
 env/
 venv/
 
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
 # IDE and Editor files
 .vscode/
 .idea/
@@ -47,11 +52,18 @@ venv/
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.tox/
 
 # Rust specific
 .cargo/
 target/
 Cargo.lock
+
+# Cache files
+.eslintcache
+*.cache
+.cache/
 
 # Build artifacts
 *.o
@@ -85,3 +97,24 @@ logs/
 *.tmp
 *.swp
 .#*
+
+# Runtime-generated directories
+/data/
+/tenants/
+/server/
+/target_alt/
+
+# Test sled/persistence state directories
+/test_priority_queue/
+/test_priority_queue_remove/
+
+# Temporary output/log files from CI or local runs
+workflow_test_output.txt
+_cargo_tests_output.txt
+final_test_output.txt
+build_error.txt
+build_error2.txt
+check_full.txt
+check_output.txt
+test_output.txt
+test_results_rust.txt

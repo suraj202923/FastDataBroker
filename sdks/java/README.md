@@ -2,9 +2,9 @@
 
 Java SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.15
+**Version:** 0.1.16
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -17,18 +17,18 @@ Java SDK for FastDataBroker - A high-performance distributed message queue with 
 
 ## Features
 
-- 🚀 **Synchronous & Asynchronous APIs** - CompletableFuture-based async support
-- 📨 **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
-- 🎯 **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
-- 🔄 **Message Confirmation** - Optional delivery confirmation
-- 🏷️ **Message Tagging** - Tag messages for categorization
-- ⏱️ **TTL Support** - Set time-to-live for messages
-- 🔌 **WebSocket Support** - Real-time bidirectional communication
-- 🪝 **Webhook Endpoints** - Integrate with external systems
-- 🌐 **QUIC Protocol** - High-performance UDP-based protocol
-- 🔐 **Clustering Support** - Multi-region failover and load balancing
-- 📊 **Reactive Streams** - RxJava integration for reactive programming
-- 🏗️ **Builder Pattern** - Fluent API for message construction
+- ðŸš€ **Synchronous & Asynchronous APIs** - CompletableFuture-based async support
+- ðŸ“¨ **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
+- ðŸŽ¯ **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
+- ðŸ”„ **Message Confirmation** - Optional delivery confirmation
+- ðŸ·ï¸ **Message Tagging** - Tag messages for categorization
+- â±ï¸ **TTL Support** - Set time-to-live for messages
+- ðŸ”Œ **WebSocket Support** - Real-time bidirectional communication
+- ðŸª **Webhook Endpoints** - Integrate with external systems
+- ðŸŒ **QUIC Protocol** - High-performance UDP-based protocol
+- ðŸ” **Clustering Support** - Multi-region failover and load balancing
+- ðŸ“Š **Reactive Streams** - RxJava integration for reactive programming
+- ðŸ—ï¸ **Builder Pattern** - Fluent API for message construction
 
 ## Installation
 
@@ -47,7 +47,7 @@ Add to your `pom.xml`:
 ### Gradle
 
 ```gradle
-implementation 'com.fastdatabroker:fastdatabroker-sdk:0.1.15'
+implementation 'com.fastdatabroker:fastdatabroker-sdk:0.1.16'
 ```
 
 ### From Source
@@ -96,7 +96,7 @@ Message message = Message.builder()
 
 // Send synchronously
 String messageId = client.sendMessage(message);
-System.out.println("✓ Message sent: " + messageId);
+System.out.println("âœ“ Message sent: " + messageId);
 ```
 
 ### 3. Send Asynchronously
@@ -104,9 +104,9 @@ System.out.println("✓ Message sent: " + messageId);
 ```java
 // Send asynchronously
 client.sendMessageAsync(message)
-    .thenAccept(messageId -> System.out.println("✓ Async message sent: " + messageId))
+    .thenAccept(messageId -> System.out.println("âœ“ Async message sent: " + messageId))
     .exceptionally(ex -> {
-        System.err.println("✗ Error: " + ex.getMessage());
+        System.err.println("âœ— Error: " + ex.getMessage());
         return null;
     });
 ```
@@ -136,7 +136,7 @@ public class PriorityExample {
                 .build();
 
             String id1 = client.sendMessage(criticalMsg);
-            System.out.println("✓ Critical message sent: " + id1);
+            System.out.println("âœ“ Critical message sent: " + id1);
 
             // Urgent priority message
             Message urgentMsg = Message.builder()
@@ -148,7 +148,7 @@ public class PriorityExample {
                 .build();
 
             String id2 = client.sendMessage(urgentMsg);
-            System.out.println("✓ Urgent message sent: " + id2);
+            System.out.println("âœ“ Urgent message sent: " + id2);
 
             // Normal priority message
             Message normalMsg = Message.builder()
@@ -160,7 +160,7 @@ public class PriorityExample {
                 .build();
 
             String id3 = client.sendMessage(normalMsg);
-            System.out.println("✓ Normal message sent: " + id3);
+            System.out.println("âœ“ Normal message sent: " + id3);
 
             // Deferred priority message
             Message deferredMsg = Message.builder()
@@ -172,7 +172,7 @@ public class PriorityExample {
                 .build();
 
             String id4 = client.sendMessage(deferredMsg);
-            System.out.println("✓ Deferred message sent: " + id4);
+            System.out.println("âœ“ Deferred message sent: " + id4);
         }
     }
 }
@@ -213,10 +213,10 @@ public class BatchMessagesExample {
             for (Message msg : messages) {
                 try {
                     String messageId = client.sendMessage(msg);
-                    System.out.printf("✓ Message sent - ID: %s, TTL: %ds%n", 
+                    System.out.printf("âœ“ Message sent - ID: %s, TTL: %ds%n", 
                         messageId, msg.getTtlSeconds());
                 } catch (Exception ex) {
-                    System.err.println("✗ Failed: " + ex.getMessage());
+                    System.err.println("âœ— Failed: " + ex.getMessage());
                 }
             }
         }
@@ -252,7 +252,7 @@ public class TaggedMessagesExample {
                 .build();
 
             String messageId = client.sendMessage(message);
-            System.out.println("✓ Tagged message sent: " + messageId);
+            System.out.println("âœ“ Tagged message sent: " + messageId);
             System.out.println("  Tags:");
             message.getTags().forEach((k, v) -> System.out.printf("    - %s: %s%n", k, v));
         }
@@ -272,7 +272,7 @@ public class WebSocketExample {
     public static void main(String[] args) throws Exception {
         WebSocketClient wsClient = new WebSocketClient("ws://localhost:6001");
         wsClient.connect();
-        System.out.println("✓ WebSocket client connected");
+        System.out.println("âœ“ WebSocket client connected");
 
         // Register multiple WebSocket clients
         String[] clientIds = {"client-001", "client-002", "client-003"};
@@ -280,7 +280,7 @@ public class WebSocketExample {
 
         for (int i = 0; i < clientIds.length; i++) {
             wsClient.registerClient(clientIds[i], userIds[i]);
-            System.out.println("✓ WebSocket registered: " + clientIds[i] + 
+            System.out.println("âœ“ WebSocket registered: " + clientIds[i] + 
                 " -> " + userIds[i]);
         }
 
@@ -296,17 +296,17 @@ public class WebSocketExample {
             .build();
 
         String messageId = wsClient.sendMessage(message);
-        System.out.println("✓ Message sent to WebSocket clients: " + messageId);
+        System.out.println("âœ“ Message sent to WebSocket clients: " + messageId);
 
         // Listen for messages
         wsClient.subscribe("user-A", msg -> {
-            System.out.println("✓ Received: " + msg.getSubject());
+            System.out.println("âœ“ Received: " + msg.getSubject());
         });
 
         // Cleanup
         for (String clientId : clientIds) {
             wsClient.unregisterClient(clientId);
-            System.out.println("✓ Unregistered: " + clientId);
+            System.out.println("âœ“ Unregistered: " + clientId);
         }
 
         wsClient.disconnect();
@@ -365,9 +365,9 @@ public class ReactiveExample {
                     }
                 })
                 .subscribe(
-                    messageId -> System.out.println("✓ Sent: " + messageId),
-                    error -> System.err.println("✗ Error: " + error),
-                    () -> System.out.println("✓ Completed all messages")
+                    messageId -> System.out.println("âœ“ Sent: " + messageId),
+                    error -> System.err.println("âœ— Error: " + error),
+                    () -> System.out.println("âœ“ Completed all messages")
                 );
         }
     }
@@ -409,17 +409,17 @@ public class AsyncBatchExample {
             // Wait for all to complete
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenRun(() -> {
-                    System.out.println("✓ All messages sent:");
+                    System.out.println("âœ“ All messages sent:");
                     futures.forEach(f -> {
                         try {
                             System.out.println("  - " + f.get());
                         } catch (Exception e) {
-                            System.err.println("  ✗ Error: " + e.getMessage());
+                            System.err.println("  âœ— Error: " + e.getMessage());
                         }
                     });
                 })
                 .exceptionally(ex -> {
-                    System.err.println("✗ Failed: " + ex.getMessage());
+                    System.err.println("âœ— Failed: " + ex.getMessage());
                     return null;
                 })
                 .get();  // Wait for completion
@@ -446,7 +446,7 @@ public class CompleteApplicationExample {
             // 1. Connection
             System.out.println("1. Connecting to FastDataBroker...");
             client.connect();
-            System.out.println("✓ Connected successfully\n");
+            System.out.println("âœ“ Connected successfully\n");
 
             // 2. Send critical message with TTL
             System.out.println("2. Sending critical priority message...");
@@ -466,7 +466,7 @@ public class CompleteApplicationExample {
 
             String messageId = client.sendMessage(criticalMsg);
             long duration = ChronoUnit.MILLIS.between(startTime, Instant.now());
-            System.out.printf("✓ Message sent: %s (took %dms)%n", messageId, duration);
+            System.out.printf("âœ“ Message sent: %s (took %dms)%n", messageId, duration);
             System.out.println();
 
             // 3. Send batch messages
@@ -482,7 +482,7 @@ public class CompleteApplicationExample {
                     .build();
 
                 String id = client.sendMessage(msg);
-                System.out.printf("  ✓ Message %d: %s%n", i + 1, id);
+                System.out.printf("  âœ“ Message %d: %s%n", i + 1, id);
             }
             System.out.println();
 
@@ -498,9 +498,9 @@ public class CompleteApplicationExample {
                     .build();
 
                 client.sendMessageAsync(msg)
-                    .thenAccept(id -> System.out.printf("  ✓ Async message sent: %s%n", id))
+                    .thenAccept(id -> System.out.printf("  âœ“ Async message sent: %s%n", id))
                     .exceptionally(ex -> {
-                        System.err.printf("  ✗ Failed: %s%n", ex.getMessage());
+                        System.err.printf("  âœ— Failed: %s%n", ex.getMessage());
                         return null;
                     })
                     .get();  // Wait for this message
@@ -509,17 +509,17 @@ public class CompleteApplicationExample {
 
             // 5. Statistics
             System.out.println("5. Statistics:");
-            System.out.println("  ✓ All messages sent successfully");
-            System.out.println("  ✓ Client connected: true");
+            System.out.println("  âœ“ All messages sent successfully");
+            System.out.println("  âœ“ Client connected: true");
 
             // 6. Cleanup
             System.out.println("\n6. Cleaning up...");
             client.disconnect();
-            System.out.println("✓ Disconnected\n");
+            System.out.println("âœ“ Disconnected\n");
 
             System.out.println("=== Example completed successfully ===");
         } catch (Exception ex) {
-            System.err.println("✗ Error: " + ex.getMessage());
+            System.err.println("âœ— Error: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -645,6 +645,44 @@ try {
 ```
 
 ### Async Error Handling
+
+Handled through `CompletableFuture` callbacks and reactive streams.
+
+## Testing
+
+### Unit Tests
+
+```bash
+mvn test
+```
+
+### Comprehensive SDK Test Suite
+
+This SDK is part of the comprehensive FastDataBroker test suite with **260+ test cases** across 4 languages.
+
+**Java SDK Tests**: 60+ test cases covering:
+- âœ“ Connection management (6 tests)
+- âœ“ Message operations (6 tests)
+- âœ“ Priority handling (5 tests)
+- âœ“ Error handling (8+ tests with custom exceptions)
+- âœ“ Concurrency (ExecutorService with 10-100 threads)
+- âœ“ Async operations (CompletableFuture patterns)
+- âœ“ Performance benchmarks (latency, throughput)
+- âœ“ Integration scenarios (4 tests)
+
+**Run all SDK tests**:
+```bash
+# From workspace root - Run all 260+ tests across all SDKs
+python run_all_sdk_tests.py
+
+# Run just Java SDK tests
+cd sdks/java
+mvn test                    # 60+ comprehensive JUnit 5 tests
+mvn test -Dtest=FastDataBrokerComprehensiveTest  # Full comprehensive suite
+```
+
+ðŸ“– See [TEST_RUNNER_GUIDE.md](../../TEST_RUNNER_GUIDE.md) for detailed testing instructions
+ðŸ“„ See [SDK_TESTING_COMPLETE_v2.0.md](../../SDK_TESTING_COMPLETE_v2.0.md) for full test suite overview
 
 ```java
 client.sendMessageAsync(message)
@@ -784,3 +822,4 @@ Contributions are welcome! Please:
 - Priority-based message routing
 - TTL and tagging support
 - QUIC protocol integration
+

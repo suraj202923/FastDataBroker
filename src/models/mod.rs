@@ -1,4 +1,4 @@
-﻿//! Data models for Post Office Architecture
+//! Data models for Post Office Architecture
 //!
 //! Defines core types like Envelope, Message, Mailbox, etc.
 

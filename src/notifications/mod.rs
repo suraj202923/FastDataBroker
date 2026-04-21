@@ -1,4 +1,4 @@
-﻿// Notification system orchestrating all channels
+// Notification system orchestrating all channels
 pub mod email;
 pub mod push;
 pub mod websocket;

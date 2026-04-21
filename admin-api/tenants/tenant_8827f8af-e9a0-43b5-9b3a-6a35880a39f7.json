@@ -1,0 +1,13 @@
+{
+  "tenant_id": "tenant_8827f8af-e9a0-43b5-9b3a-6a35880a39f7",
+  "name": "Test Create Tenant",
+  "email": "test@createtenant.com",
+  "api_key": "6dc14980-052c-4a2c-b927-f644d34c8653",
+  "status": "active",
+  "max_message_size": 10485760,
+  "rate_limit_rps": 5000,
+  "max_connections": 500,
+  "retention_days": 30,
+  "created_at": "2026-04-13T06:46:18.322108900+00:00",
+  "updated_at": "2026-04-13T06:46:18.322108900+00:00"
+}

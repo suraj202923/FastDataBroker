@@ -2,9 +2,9 @@
 
 Go SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.15
+**Version:** 0.1.16
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -17,17 +17,17 @@ Go SDK for FastDataBroker - A high-performance distributed message queue with bu
 
 ## Features
 
-- 🚀 **Synchronous & Asynchronous APIs** - Both sync and async message sending
-- 📨 **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
-- 🎯 **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
-- 🔄 **Message Confirmation** - Optional delivery confirmation
-- 🏷️ **Message Tagging** - Tag messages for categorization
-- ⏱️ **TTL Support** - Set time-to-live for messages
-- 🔌 **WebSocket Support** - Real-time bidirectional communication
-- 🪝 **Webhook Endpoints** - Integrate with external systems
-- 🌐 **QUIC Protocol** - High-performance UDP-based protocol
-- 🔐 **Clustering Support** - Multi-region failover and load balancing
-- ⚡ **Context Support** - Full context.Context integration
+- ðŸš€ **Synchronous & Asynchronous APIs** - Both sync and async message sending
+- ðŸ“¨ **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
+- ðŸŽ¯ **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
+- ðŸ”„ **Message Confirmation** - Optional delivery confirmation
+- ðŸ·ï¸ **Message Tagging** - Tag messages for categorization
+- â±ï¸ **TTL Support** - Set time-to-live for messages
+- ðŸ”Œ **WebSocket Support** - Real-time bidirectional communication
+- ðŸª **Webhook Endpoints** - Integrate with external systems
+- ðŸŒ **QUIC Protocol** - High-performance UDP-based protocol
+- ðŸ” **Clustering Support** - Multi-region failover and load balancing
+- âš¡ **Context Support** - Full context.Context integration
 
 ## Installation
 
@@ -97,7 +97,7 @@ result, err := client.SendMessage(ctx, message)
 if err != nil {
 	log.Fatal("Send failed:", err)
 }
-fmt.Printf("✓ Message sent: %s\n", result.MessageID)
+fmt.Printf("âœ“ Message sent: %s\n", result.MessageID)
 fmt.Printf("  Status: %s\n", result.Status)
 fmt.Printf("  Delivered channels: %d\n", result.DeliveredChannels)
 ```
@@ -109,7 +109,7 @@ asyncResult, err := client.SendMessageAsync(ctx, message)
 if err != nil {
 	log.Fatal("Async send failed:", err)
 }
-fmt.Printf("✓ Async message sent: %s\n", asyncResult.MessageID)
+fmt.Printf("âœ“ Async message sent: %s\n", asyncResult.MessageID)
 ```
 
 ## Complete Examples
@@ -226,10 +226,10 @@ func main() {
 	for _, msg := range messages {
 		result, err := client.SendMessageAsync(ctx, msg)
 		if err != nil {
-			fmt.Printf("✗ Failed: %v\n", err)
+			fmt.Printf("âœ— Failed: %v\n", err)
 			continue
 		}
-		fmt.Printf("✓ Message sent - ID: %s, TTL: %ds\n", result.MessageID, *msg.TTLSeconds)
+		fmt.Printf("âœ“ Message sent - ID: %s, TTL: %ds\n", result.MessageID, *msg.TTLSeconds)
 	}
 
 	client.Disconnect(ctx)
@@ -278,7 +278,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("✓ Tagged message sent: %s\n", result.MessageID)
+	fmt.Printf("âœ“ Tagged message sent: %s\n", result.MessageID)
 	fmt.Println("  Tags:")
 	for k, v := range message.Tags {
 		fmt.Printf("    - %s: %s\n", k, v)
@@ -311,7 +311,7 @@ func main() {
 	}
 	defer wsClient.Close()
 
-	fmt.Println("✓ WebSocket client connected")
+	fmt.Println("âœ“ WebSocket client connected")
 
 	// Send message via WebSocket
 	message := &fastdatabroker.Message{
@@ -326,7 +326,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Send failed:", err)
 	}
-	fmt.Printf("✓ Message sent: %s\n", result.MessageID)
+	fmt.Printf("âœ“ Message sent: %s\n", result.MessageID)
 
 	// Listen for messages
 	ch := wsClient.Subscribe(ctx, "user-1")
@@ -371,16 +371,16 @@ func main() {
 	if err != nil {
 		switch err.(type) {
 		case *errors.ConnectionError:
-			fmt.Println("✗ Connection failed, retrying...")
+			fmt.Println("âœ— Connection failed, retrying...")
 		case *errors.ValidationError:
-			fmt.Println("✗ Invalid message parameters")
+			fmt.Println("âœ— Invalid message parameters")
 		case *errors.TimeoutError:
-			fmt.Println("✗ Message delivery timeout")
+			fmt.Println("âœ— Message delivery timeout")
 		default:
 			log.Fatal("Error:", err)
 		}
 	} else {
-		fmt.Printf("✓ Message sent: %s\n", result.MessageID)
+		fmt.Printf("âœ“ Message sent: %s\n", result.MessageID)
 	}
 
 	client.Disconnect(ctx)
@@ -473,7 +473,7 @@ func main() {
 	if err := client.Connect(ctx); err != nil {
 		log.Fatal("Connection failed:", err)
 	}
-	fmt.Println("✓ Connected successfully\n")
+	fmt.Println("âœ“ Connected successfully\n")
 
 	// 2. Send critical message
 	fmt.Println("2. Sending critical priority message...")
@@ -495,7 +495,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("✓ Message sent: %s (took %dms)\n", result.MessageID, time.Since(start).Milliseconds())
+	fmt.Printf("âœ“ Message sent: %s (took %dms)\n", result.MessageID, time.Since(start).Milliseconds())
 	fmt.Println()
 
 	// 3. Send batch messages
@@ -511,10 +511,10 @@ func main() {
 		}
 		res, err := client.SendMessageAsync(ctx, msg)
 		if err != nil {
-			fmt.Printf("  ✗ Message %d failed: %v\n", i+1, err)
+			fmt.Printf("  âœ— Message %d failed: %v\n", i+1, err)
 			continue
 		}
-		fmt.Printf("  ✓ Message %d: %s\n", i+1, res.MessageID)
+		fmt.Printf("  âœ“ Message %d: %s\n", i+1, res.MessageID)
 	}
 	fmt.Println()
 
@@ -522,16 +522,16 @@ func main() {
 	fmt.Println("4. Getting message status...")
 	status, err := client.GetMessageStatus(ctx, result.MessageID)
 	if err != nil {
-		fmt.Printf("  ✗ Failed to get status: %v\n", err)
+		fmt.Printf("  âœ— Failed to get status: %v\n", err)
 	} else {
-		fmt.Printf("  ✓ Message status: %s\n", status)
+		fmt.Printf("  âœ“ Message status: %s\n", status)
 	}
 	fmt.Println()
 
 	// 5. Cleanup
 	fmt.Println("5. Cleaning up...")
 	client.Disconnect(ctx)
-	fmt.Println("✓ Disconnected\n")
+	fmt.Println("âœ“ Disconnected\n")
 
 	fmt.Println("=== Example completed successfully ===")
 }
@@ -642,6 +642,43 @@ type TimeoutError struct {
 ```
 
 ### Error Handling Pattern
+
+See examples in SDK for handling these errors.
+
+## Testing
+
+### Unit Tests
+
+```bash
+go test ./...
+```
+
+### Comprehensive SDK Test Suite
+
+This SDK is part of the comprehensive FastDataBroker test suite with **260+ test cases** across 4 languages.
+
+**Go SDK Tests**: 60+ test cases covering:
+- âœ“ Connection management (6 tests)
+- âœ“ Message operations (6 tests)
+- âœ“ Priority handling (5 tests)
+- âœ“ Error handling (8+ tests)
+- âœ“ Concurrency (10-100 concurrent operations with sync.WaitGroup)
+- âœ“ Performance benchmarks (latency, throughput)
+- âœ“ Integration scenarios (4 tests)
+
+**Run all SDK tests**:
+```bash
+# From workspace root - Run all 260+ tests across all SDKs
+python run_all_sdk_tests.py
+
+# Run just Go SDK tests
+cd sdks/go
+go test ./... -v            # 60+ comprehensive go tests
+go test -bench=.            # Performance benchmarks
+```
+
+ðŸ“– See [TEST_RUNNER_GUIDE.md](../../TEST_RUNNER_GUIDE.md) for detailed testing instructions
+ðŸ“„ See [SDK_TESTING_COMPLETE_v2.0.md](../../SDK_TESTING_COMPLETE_v2.0.md) for full test suite overview
 
 ```go
 result, err := client.SendMessage(ctx, message)
@@ -800,3 +837,4 @@ Contributions are welcome! Please:
 - Basic synchronous and asynchronous APIs
 - Priority-based message routing
 - QUIC protocol support
+

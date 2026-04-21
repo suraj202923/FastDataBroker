@@ -2,9 +2,9 @@
 
 C# SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.15
+**Version:** 0.1.16
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -17,16 +17,16 @@ C# SDK for FastDataBroker - A high-performance distributed message queue with bu
 
 ## Features
 
-- 🚀 **Synchronous & Asynchronous APIs** - Both sync and async message sending
-- 📨 **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
-- 🎯 **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
-- 🔄 **Message Confirmation** - Optional delivery confirmation
-- 🏷️ **Message Tagging** - Tag messages for categorization
-- ⏱️ **TTL Support** - Set time-to-live for messages
-- 🔌 **WebSocket Support** - Real-time bidirectional communication
-- 🪝 **Webhook Endpoints** - Integrate with external systems
-- 🌐 **QUIC Protocol** - High-performance UDP-based protocol
-- 🔐 **Clustering Support** - Multi-region failover and load balancing
+- ðŸš€ **Synchronous & Asynchronous APIs** - Both sync and async message sending
+- ðŸ“¨ **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
+- ðŸŽ¯ **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
+- ðŸ”„ **Message Confirmation** - Optional delivery confirmation
+- ðŸ·ï¸ **Message Tagging** - Tag messages for categorization
+- â±ï¸ **TTL Support** - Set time-to-live for messages
+- ðŸ”Œ **WebSocket Support** - Real-time bidirectional communication
+- ðŸª **Webhook Endpoints** - Integrate with external systems
+- ðŸŒ **QUIC Protocol** - High-performance UDP-based protocol
+- ðŸ” **Clustering Support** - Multi-region failover and load balancing
 
 ## Installation
 
@@ -50,7 +50,7 @@ Add to your `.csproj`:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="FastDataBroker" Version="0.1.15" />
+    <PackageReference Include="FastDataBroker" Version="0.1.16" />
 </ItemGroup>
 ```
 
@@ -97,7 +97,7 @@ var message = new FastDataBrokerSDK.Message
 
 // Send synchronously
 var result = client.SendMessage(message);
-Console.WriteLine($"✓ Message sent: {result.MessageId}");
+Console.WriteLine($"âœ“ Message sent: {result.MessageId}");
 Console.WriteLine($"  Status: {result.Status}");
 Console.WriteLine($"  Delivered channels: {result.DeliveredChannels}");
 ```
@@ -108,11 +108,11 @@ Console.WriteLine($"  Delivered channels: {result.DeliveredChannels}");
 try
 {
     var asyncResult = await client.SendMessageAsync(message);
-    Console.WriteLine($"✓ Async message sent: {asyncResult.MessageId}");
+    Console.WriteLine($"âœ“ Async message sent: {asyncResult.MessageId}");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"✗ Error: {ex.Message}");
+    Console.WriteLine($"âœ— Error: {ex.Message}");
 }
 ```
 
@@ -219,11 +219,11 @@ class BatchMessagesExample
                 try
                 {
                     var result = await client.SendMessageAsync(msg);
-                    Console.WriteLine($"✓ Message sent - ID: {result.MessageId}, TTL: {msg.TTLSeconds}s");
+                    Console.WriteLine($"âœ“ Message sent - ID: {result.MessageId}, TTL: {msg.TTLSeconds}s");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"✗ Failed to send message: {ex.Message}");
+                    Console.WriteLine($"âœ— Failed to send message: {ex.Message}");
                 }
             }
 
@@ -268,7 +268,7 @@ class TaggedMessagesExample
             };
 
             var result = await client.SendMessageAsync(message);
-            Console.WriteLine($"✓ Tagged message sent: {result.MessageId}");
+            Console.WriteLine($"âœ“ Tagged message sent: {result.MessageId}");
             Console.WriteLine("  Tags:");
             foreach (var tag in message.Tags)
             {
@@ -305,11 +305,11 @@ class WebSocketExample
                 bool registered = client.RegisterWebSocketClient(clientIds[i], userIds[i]);
                 if (registered)
                 {
-                    Console.WriteLine($"✓ WebSocket client registered: {clientIds[i]} -> {userIds[i]}");
+                    Console.WriteLine($"âœ“ WebSocket client registered: {clientIds[i]} -> {userIds[i]}");
                 }
                 else
                 {
-                    Console.WriteLine($"✗ Failed to register: {clientIds[i]}");
+                    Console.WriteLine($"âœ— Failed to register: {clientIds[i]}");
                 }
             }
 
@@ -324,13 +324,13 @@ class WebSocketExample
             };
 
             var result = await client.SendMessageAsync(message);
-            Console.WriteLine($"\n✓ Message sent to WebSocket clients: {result.MessageId}");
+            Console.WriteLine($"\nâœ“ Message sent to WebSocket clients: {result.MessageId}");
 
             // Unregister clients
             foreach (var clientId in clientIds)
             {
                 client.UnregisterWebSocketClient(clientId);
-                Console.WriteLine($"✓ Unregistered: {clientId}");
+                Console.WriteLine($"âœ“ Unregistered: {clientId}");
             }
 
             client.Disconnect();
@@ -378,7 +378,7 @@ class WebhookExample
 
             if (registered)
             {
-                Console.WriteLine("✓ Webhook registered successfully");
+                Console.WriteLine("âœ“ Webhook registered successfully");
                 Console.WriteLine($"  URL: {webhookConfig.Url}");
                 Console.WriteLine($"  Retries: {webhookConfig.Retries}");
                 Console.WriteLine($"  Timeout: {webhookConfig.TimeoutMs}ms");
@@ -395,7 +395,7 @@ class WebhookExample
             };
 
             var result = await client.SendMessageAsync(message);
-            Console.WriteLine($"\n✓ Message sent with webhook: {result.MessageId}");
+            Console.WriteLine($"\nâœ“ Message sent with webhook: {result.MessageId}");
 
             client.Disconnect();
         }
@@ -427,15 +427,15 @@ class CompleteApplicationExample
                 bool connected = await client.ConnectAsync();
                 if (!connected)
                 {
-                    Console.WriteLine("✗ Failed to connect");
+                    Console.WriteLine("âœ— Failed to connect");
                     return;
                 }
-                Console.WriteLine("✓ Connected successfully\n");
+                Console.WriteLine("âœ“ Connected successfully\n");
 
                 // Register WebSocket client
                 Console.WriteLine("2. Registering WebSocket client...");
                 bool wsRegistered = client.RegisterWebSocketClient("app-client", "user-123");
-                Console.WriteLine(wsRegistered ? "✓ WebSocket client registered\n" : "✗ Registration failed\n");
+                Console.WriteLine(wsRegistered ? "âœ“ WebSocket client registered\n" : "âœ— Registration failed\n");
 
                 // Send critical message
                 Console.WriteLine("3. Sending critical priority message...");
@@ -455,7 +455,7 @@ class CompleteApplicationExample
                 };
                 var result1 = await client.SendMessageAsync(criticalMsg);
                 stopwatch.Stop();
-                Console.WriteLine($"✓ Message sent: {result1.MessageId}");
+                Console.WriteLine($"âœ“ Message sent: {result1.MessageId}");
                 Console.WriteLine($"  Time taken: {stopwatch.ElapsedMilliseconds}ms\n");
 
                 // Send batch messages
@@ -472,26 +472,26 @@ class CompleteApplicationExample
                         TTLSeconds = 7200
                     };
                     var res = await client.SendMessageAsync(msg);
-                    Console.WriteLine($"  ✓ Message {i + 1}: {res.MessageId}");
+                    Console.WriteLine($"  âœ“ Message {i + 1}: {res.MessageId}");
                 }
                 Console.WriteLine();
 
                 // Statistics
                 Console.WriteLine("5. Final Statistics:");
-                Console.WriteLine($"  ✓ Client connected: {client.IsConnected}");
-                Console.WriteLine($"  ✓ Messages sent successfully");
+                Console.WriteLine($"  âœ“ Client connected: {client.IsConnected}");
+                Console.WriteLine($"  âœ“ Messages sent successfully");
 
                 // Cleanup
                 Console.WriteLine("\n6. Cleaning up...");
                 client.UnregisterWebSocketClient("app-client");
                 client.Disconnect();
-                Console.WriteLine("✓ Disconnected\n");
+                Console.WriteLine("âœ“ Disconnected\n");
 
                 Console.WriteLine("=== Example completed successfully ===");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"✗ Error occurred: {ex.Message}");
+                Console.WriteLine($"âœ— Error occurred: {ex.Message}");
                 Console.WriteLine($"  Stack trace: {ex.StackTrace}");
             }
         }
@@ -642,6 +642,39 @@ using (var client = new FastDataBrokerSDK.Client("localhost", 6000))
 }
 ```
 
+## Testing
+
+### Unit Tests
+
+```bash
+dotnet test
+```
+
+### Comprehensive SDK Test Suite
+
+This SDK is part of the comprehensive FastDataBroker test suite with **260+ test cases** across 4 languages.
+
+**SDK Test Coverage**: 260+ tests across Python, Go, Java, and JavaScript SDKs
+- âœ“ Connection management (6 tests per SDK)
+- âœ“ Message operations (6 tests per SDK)
+- âœ“ Priority handling (5 tests per SDK)
+- âœ“ Error handling (8+ tests per SDK)
+- âœ“ Concurrency testing (5+ tests per SDK)
+- âœ“ Performance benchmarks (4+ tests per SDK)
+- âœ“ Integration scenarios (4+ tests per SDK)
+
+**Run all SDK tests**:
+```bash
+# From workspace root - Run all 260+ tests across Python, Go, Java, JavaScript
+python run_all_sdk_tests.py
+
+# C# SDK note: Comprehensive test suite for C# coming soon
+# Current: Unit tests available with: dotnet test
+```
+
+ðŸ“– See [TEST_RUNNER_GUIDE.md](../../TEST_RUNNER_GUIDE.md) for detailed testing instructions
+ðŸ“„ See [SDK_TESTING_COMPLETE_v2.0.md](../../SDK_TESTING_COMPLETE_v2.0.md) for full test suite overview
+
 ## Advanced Features
 
 ### Batch Processing
@@ -783,3 +816,4 @@ Contributions are welcome! Please:
 - Basic synchronous and asynchronous message APIs
 - Priority-based message routing
 - TTL and tagging support
+

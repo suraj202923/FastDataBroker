@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastDataBroker Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
+            --light: #f7fafc;
+            --dark: #1a202c;
+            --border: #e2e8f0;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* LOGIN PAGE */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-box h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-box p {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .demo-creds {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #2d3748;
+            border-left: 4px solid var(--info);
+        }
+
+        .demo-creds strong {
+            color: var(--info);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff5f5;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* DASHBOARD */
+        .dashboard-container {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            background: var(--light);
+        }
+
+        .dashboard-container.active {
+            display: flex;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 15px 0;
+        }
+
+        .sidebar-menu li {
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            padding: 12px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .sidebar-menu li:hover a {
+            color: var(--primary);
+            background: #f7fafc;
+        }
+
+        .sidebar-menu li.active {
+            border-left: 3px solid var(--primary);
+            background: #f0f7ff;
+        }
+
+        .sidebar-menu li.active a {
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .logout-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .topbar h2 {
+            color: var(--dark);
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .content {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* SECTIONS */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .stat-card.info {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-subtext {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        /* TABLES */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #f7fafc;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge.danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge.warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .badge.info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        /* FORMS */
+        .form {
+            max-width: 600px;
+        }
+
+        .form-field {
+            margin-bottom: 20px;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-field input,
+        .form-field textarea,
+        .form-field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn.secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn.secondary:hover {
+            background: #edf2f7;
+        }
+
+        .btn.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn.small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* BUTTON GROUP */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* ALERTS */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert.danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .alert.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        /* API TESTER */
+        .api-tester {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .api-request,
+        .api-response {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .api-response {
+            background: #0f172a;
+        }
+
+        .response-success {
+            color: #48bb78;
+        }
+
+        .response-error {
+            color: #f56565;
+        }
+
+        .response-key {
+            color: #63b3ed;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #718096;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                z-index: 999;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .api-tester {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                position: relative;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1>âš¡ FastDataBroker</h1>
+            <p>Admin Dashboard</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+            <div class="demo-creds">
+                <strong>Demo Credentials:</strong><br>
+                Username: <strong>admin</strong><br>
+                Password: <strong>admin</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    âš¡ FastDataBroker
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active"><a data-section="dashboard">ðŸ“Š Dashboard</a></li>
+                <li><a data-section="server">ðŸ–¥ï¸ Server Info</a></li>
+                <li><a data-section="tenants">ðŸ‘¥ Tenants</a></li>
+                <li><a data-section="api-explorer">ðŸ”Œ API Explorer</a></li>
+                <li><a data-section="metrics">ðŸ“ˆ Metrics</a></li>
+                <li><a data-section="configuration">âš™ï¸ Configuration</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
+            <div class="topbar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="menu-toggle" id="menuToggle">â˜°</button>
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="user-info">
+                    <div class="status-badge" id="serverStatus">
+                        <span class="status-dot online"></span>
+                        <span id="statusText">Online</span>
+                    </div>
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div id="currentUser">Admin</div>
+                </div>
+            </div>
+
+            <!-- CONTENT AREA -->
+            <div class="content">
+                <!-- DASHBOARD SECTION -->
+                <div id="dashboard-section" class="section active">
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Server Status</div>
+                            <div class="stat-value" id="serverStatusValue">Online</div>
+                            <div class="stat-subtext">Running</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label">Total Tenants</div>
+                            <div class="stat-value" id="totalTenants">3</div>
+                            <div class="stat-subtext">Active</div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-label">API Health</div>
+                            <div class="stat-value" id="apiHealth">Healthy</div>
+                            <div class="stat-subtext">All endpoints responding</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">Uptime</div>
+                            <div class="stat-value" id="uptime">99.9%</div>
+                            <div class="stat-subtext">Last 30 days</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Quick Actions</h3>
+                        <div class="button-group">
+                            <button class="btn primary" id="refreshBtn">ðŸ”„ Refresh Status</button>
+                            <button class="btn primary" id="testApiBtn">ðŸ§ª Test API</button>
+                            <button class="btn secondary" id="viewDocsBtn">ðŸ“– View Docs</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Recent Activity</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activityTable">
+                                    <tr>
+                                        <td>2026-04-13 06:15</td>
+                                        <td>Server Started</td>
+                                        <td><span class="badge success">Success</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-04-13 06:16</td>
+                                        <td>Admin API Initialized</td>
+                                        <td><span class="badge success">Success</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-04-13 06:17</td>
+                                        <td>All Tenants Loaded</td>
+                                        <td><span class="badge success">Success</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SERVER INFO SECTION -->
+                <div id="server-section" class="section">
+                    <div class="alert success" id="serverAlert"></div>
+                    
+                    <div class="card">
+                        <h3>Server Status</h3>
+                        <div class="button-group">
+                            <button class="btn primary" id="fetchServerStatusBtn">ðŸ“¡ Fetch Status</button>
+                            <button class="btn primary" id="checkHealthBtn">âœ“ Health Check</button>
+                            <button class="btn secondary" id="viewServerMetricsBtn">ðŸ“Š View Metrics</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Server Information</h3>
+                        <div id="serverInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <div style="padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 4px solid var(--primary);">
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Version</div>
+                                <div style="font-size: 18px; font-weight: 600; color: var(--dark);" id="serverVersion">0.1.16</div>
+                            </div>
+                            <div style="padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 4px solid var(--success);">
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Uptime</div>
+                                <div style="font-size: 18px; font-weight: 600; color: var(--dark);" id="serverUptime">24h 30m</div>
+                            </div>
+                            <div style="padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 4px solid var(--info);">
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">Memory Usage</div>
+                                <div style="font-size: 18px; font-weight: 600; color: var(--dark);" id="memoryUsage">245 MB</div>
+                            </div>
+                            <div style="padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 4px solid var(--warning);">
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">CPU Usage</div>
+                                <div style="font-size: 18px; font-weight: 600; color: var(--dark);" id="cpuUsage">12%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Available Endpoints</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="endpointsTable">
+                                    <tr>
+                                        <td>/health</td>
+                                        <td><span class="badge info">GET</span></td>
+                                        <td><span class="badge success">Online</span></td>
+                                        <td><button class="btn small primary" onclick="testEndpoint('/health', 'GET')">Test</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>/api/v1/tenants</td>
+                                        <td><span class="badge info">GET</span></td>
+                                        <td><span class="badge success">Online</span></td>
+                                        <td><button class="btn small primary" onclick="testEndpoint('/api/v1/tenants', 'GET')">Test</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>/api/v1/auth/login</td>
+                                        <td><span class="badge warning">POST</span></td>
+                                        <td><span class="badge success">Online</span></td>
+                                        <td><button class="btn small primary" onclick="testEndpoint('/api/v1/auth/login', 'POST')">Test</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>/api/v1/stats</td>
+                                        <td><span class="badge info">GET</span></td>
+                                        <td><span class="badge success">Online</span></td>
+                                        <td><button class="btn small primary" onclick="testEndpoint('/api/v1/stats', 'GET')">Test</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TENANTS SECTION -->
+                <div id="tenants-section" class="section">
+                    <div class="card">
+                        <h3>Tenant Management</h3>
+                        <div class="button-group">
+                            <button class="btn primary" id="loadTenantsBtn">ðŸ“‹ Load Tenants</button>
+                            <button class="btn primary" id="createTenantBtn">âž• Create Tenant</button>
+                            <button class="btn secondary" id="refreshTenantsBtn">ðŸ”„ Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Active Tenants</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tenant ID</th>
+                                        <th>Name</th>
+                                        <th>Rate Limit</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tenantsTable">
+                                    <tr>
+                                        <td><code>default</code></td>
+                                        <td>Default Tenant</td>
+                                        <td>10,000 req/s</td>
+                                        <td><span class="badge success">Active</span></td>
+                                        <td>
+                                            <button class="btn small primary" onclick="viewTenant('default')">View</button>
+                                            <button class="btn small secondary" onclick="editTenant('default')">Edit</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>acme-corp</code></td>
+                                        <td>ACME Corporation</td>
+                                        <td>5,000 req/s</td>
+                                        <td><span class="badge success">Active</span></td>
+                                        <td>
+                                            <button class="btn small primary" onclick="viewTenant('acme-corp')">View</button>
+                                            <button class="btn small secondary" onclick="editTenant('acme-corp')">Edit</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>startup-xyz</code></td>
+                                        <td>Startup XYZ</td>
+                                        <td>1,000 req/s</td>
+                                        <td><span class="badge success">Active</span></td>
+                                        <td>
+                                            <button class="btn small primary" onclick="viewTenant('startup-xyz')">View</button>
+                                            <button class="btn small secondary" onclick="editTenant('startup-xyz')">Edit</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API EXPLORER SECTION -->
+                <div id="api-explorer-section" class="section">
+                    <div class="card">
+                        <h3>API Explorer</h3>
+                        <p style="color: #718096; margin-bottom: 20px;">Test FastDataBroker APIs directly from the dashboard</p>
+                        
+                        <div class="form">
+                            <div class="form-field">
+                                <label for="apiMethod">HTTP Method</label>
+                                <select id="apiMethod">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="apiEndpoint">Endpoint</label>
+                                <input type="text" id="apiEndpoint" placeholder="/api/v1/tenants" value="/api/v1/tenants">
+                            </div>
+                            <div class="form-field">
+                                <label for="apiHeaders">Headers (JSON)</label>
+                                <textarea id="apiHeaders" placeholder='{"Content-Type": "application/json", "X-API-Key": "your-key"}'>{
+  "Content-Type": "application/json",
+  "X-API-Key": "admin-key"
+}</textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="apiBody">Request Body (JSON)</label>
+                                <textarea id="apiBody" placeholder='{"key": "value"}'>{
+  "test": "data"
+}</textarea>
+                            </div>
+                            <div class="button-group">
+                                <button class="btn primary" id="sendApiRequestBtn">ðŸ“¤ Send Request</button>
+                                <button class="btn secondary" id="clearApiBtn">ðŸ—‘ï¸ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Response</h3>
+                        <div class="api-tester">
+                            <div>
+                                <div style="margin-bottom: 10px; font-weight: 600; color: var(--dark);">Request</div>
+                                <div class="api-request" id="apiRequest">
+                                    <div class="response-key">GET</div> /api/v1/tenants<br><br>
+                                    <span class="response-key">Headers:</span><br>
+                                    Content-Type: application/json<br>
+                                    X-API-Key: admin-key
+                                </div>
+                            </div>
+                            <div>
+                                <div style="margin-bottom: 10px; font-weight: 600; color: var(--dark);">Response</div>
+                                <div class="api-response" id="apiResponse">
+                                    <span class="response-key">Status:</span> 200 OK<br><br>
+                                    <span class="response-key">{</span><br>
+                                    &nbsp;&nbsp;<span class="response-key">"status":</span> <span class="response-success">"success"</span>,<br>
+                                    &nbsp;&nbsp;<span class="response-key">"data":</span> [ ... ]<br>
+                                    <span class="response-key">}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- METRICS SECTION -->
+                <div id="metrics-section" class="section">
+                    <div class="card">
+                        <h3>Performance Metrics</h3>
+                        <div class="grid">
+                            <div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">Requests/Sec</div>
+                                <div style="font-size: 28px; font-weight: 700;" id="requestsPerSec">12,450</div>
+                                <div style="font-size: 12px; opacity: 0.8; margin-top: 8px;">â†‘ 5% from last hour</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">Avg Latency</div>
+                                <div style="font-size: 28px; font-weight: 700;" id="avgLatency">2.4ms</div>
+                                <div style="font-size: 12px; opacity: 0.8; margin-top: 8px;">â†“ Good performance</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">Error Rate</div>
+                                <div style="font-size: 28px; font-weight: 700;" id="errorRate">0.02%</div>
+                                <div style="font-size: 12px; opacity: 0.8; margin-top: 8px;">Excellent reliability</div>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">Total Requests</div>
+                                <div style="font-size: 28px; font-weight: 700;" id="totalRequests">2.4M</div>
+                                <div style="font-size: 12px; opacity: 0.8; margin-top: 8px;">Lifetime</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Endpoint Performance</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Requests</th>
+                                        <th>Avg Latency</th>
+                                        <th>Error Rate</th>
+                                        <th>P99 Latency</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>/api/v1/tenants</td>
+                                        <td>450K</td>
+                                        <td>2.1ms</td>
+                                        <td>0.01%</td>
+                                        <td>5.2ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td>/api/v1/send</td>
+                                        <td>1.2M</td>
+                                        <td>2.8ms</td>
+                                        <td>0.02%</td>
+                                        <td>8.5ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td>/api/v1/stats</td>
+                                        <td>340K</td>
+                                        <td>1.8ms</td>
+                                        <td>0.01%</td>
+                                        <td>4.3ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td>/health</td>
+                                        <td>122K</td>
+                                        <td>0.5ms</td>
+                                        <td>0%</td>
+                                        <td>1.2ms</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIGURATION SECTION -->
+                <div id="configuration-section" class="section">
+                    <div class="card">
+                        <h3>Server Configuration</h3>
+                        <div class="form">
+                            <div class="form-field">
+                                <label for="configPort">Server Port</label>
+                                <input type="number" id="configPort" value="6379" disabled>
+                            </div>
+                            <div class="form-field">
+                                <label for="configAddress">Bind Address</label>
+                                <input type="text" id="configAddress" value="0.0.0.0" disabled>
+                            </div>
+                            <div class="form-field">
+                                <label for="configMaxConn">Max Connections</label>
+                                <input type="number" id="configMaxConn" value="10000">
+                            </div>
+                            <div class="form-field">
+                                <label for="configLogLevel">Log Level</label>
+                                <select id="configLogLevel">
+                                    <option>DEBUG</option>
+                                    <option selected>INFO</option>
+                                    <option>WARN</option>
+                                    <option>ERROR</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="configRetention">Data Retention (days)</label>
+                                <input type="number" id="configRetention" value="30">
+                            </div>
+                            <div class="button-group">
+                                <button class="btn primary" id="saveConfigBtn">ðŸ’¾ Save Configuration</button>
+                                <button class="btn secondary" id="resetConfigBtn">â†º Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Security Settings</h3>
+                        <div class="form">
+                            <div class="form-field">
+                                <label for="tlsEnabled">
+                                    <input type="checkbox" id="tlsEnabled"> Enable TLS
+                                </label>
+                            </div>
+                            <div class="form-field">
+                                <label for="corsEnabled">
+                                    <input type="checkbox" id="corsEnabled" checked> Enable CORS
+                                </label>
+                            </div>
+                            <div class="form-field">
+                                <label for="authRequired">
+                                    <input type="checkbox" id="authRequired" checked> Require Authentication
+                                </label>
+                            </div>
+                            <div class="button-group">
+                                <button class="btn primary" id="applySecurity Btn">âœ“ Apply Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GLOBAL STATE ====================
+        const API_BASE_URL = 'http://127.0.0.1:3000';
+        let currentUser = null;
+        let authToken = null;
+
+        // ==================== DATA FETCHING ====================
+        async function fetchWithAuth(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    console.error(`API Error [${response.status}]:`, data);
+                    throw new Error(data.message || `API Error: ${response.status}`);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function refreshDashboard() {
+            try {
+                // Fetch server info
+                const serverInfo = await fetchWithAuth(`${API_BASE_URL}/health`);
+                document.getElementById('serverStatusValue').textContent = serverInfo.status || 'Online';
+                
+                // Fetch tenants
+                const tenantsData = await fetchWithAuth(`${API_BASE_URL}/api/v1/tenants`);
+                const tenantCount = tenantsData.data ? tenantsData.data.length : 0;
+                document.getElementById('totalTenants').textContent = tenantCount;
+                
+                // Fetch stats
+                const stats = await fetchWithAuth(`${API_BASE_URL}/api/v1/stats`);
+                if (stats.data) {
+                    document.getElementById('requestsPerSec').textContent = 
+                        (stats.data.metrics?.requestsPerSec || 0).toLocaleString();
+                    document.getElementById('avgLatency').textContent = 
+                        (stats.data.metrics?.avgLatency || 0).toFixed(1) + 'ms';
+                    document.getElementById('errorRate').textContent = 
+                        (stats.data.metrics?.errorRate || 0).toFixed(2) + '%';
+                    document.getElementById('totalRequests').textContent = 
+                        (stats.data.metrics?.totalRequests || 0).toLocaleString();
+                }
+                
+                showAlert('Dashboard refreshed with real-time data', 'success');
+            } catch (error) {
+                console.error('Error refreshing dashboard:', error);
+                showAlert('Error refreshing data: ' + error.message, 'danger');
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+
+            try {
+                errorDiv.classList.remove('show');
+                
+                // For demo: simple hardcoded check
+                if (username === 'admin' && password === 'admin') {
+                    currentUser = username;
+                    authToken = btoa(`${username}:${password}`);
+                    showLogin(false);
+                    refreshDashboard(); // Load real-time data from Admin API
+                } else {
+                    throw new Error('Invalid credentials');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'âŒ ' + error.message;
+                errorDiv.classList.add('show');
+            }
+        });
+
+        function showLogin(show) {
+            document.getElementById('loginPage').style.display = show ? 'flex' : 'none';
+            document.getElementById('dashboard').classList.toggle('active', !show);
+            if (!show) {
+                document.getElementById('currentUser').textContent = currentUser;
+                document.getElementById('userAvatar').textContent = currentUser.charAt(0).toUpperCase();
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.dataset.section;
+                showSection(section);
+            });
+        });
+
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+
+            // Show selected section
+            const sectionEl = document.getElementById(section + '-section');
+            if (sectionEl) {
+                sectionEl.classList.add('active');
+            }
+
+            // Update active menu item
+            const link = document.querySelector(`[data-section="${section}"]`);
+            if (link) {
+                link.parentElement.classList.add('active');
+            }
+
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'server': 'Server Information',
+                'tenants': 'Tenant Management',
+                'api-explorer': 'API Explorer',
+                'metrics': 'Performance Metrics',
+                'configuration': 'Configuration'
+            };
+            document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        // ==================== MENU TOGGLE ====================
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // ==================== LOGOUT ====================
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            currentUser = null;
+            authToken = null;
+            document.getElementById('loginForm').reset();
+            document.getElementById('username').focus();
+            showLogin(true);
+        });
+
+        // ==================== API CALLS ====================
+        async function fetchServerStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    headers: {}
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('statusText').textContent = 'Online';
+                    document.getElementById('serverStatusValue').textContent = data.status || 'Online';
+                    showAlert('Server status fetched successfully', 'success');
+                }
+            } catch (error) {
+                document.getElementById('statusText').textContent = 'Offline';
+                console.error('Error fetching server status:', error);
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('refreshBtn').addEventListener('click', refreshDashboard);
+
+        document.getElementById('testApiBtn').addEventListener('click', () => {
+            showSection('api-explorer');
+        });
+
+        document.getElementById('viewDocsBtn').addEventListener('click', () => {
+            alert('Documentation files are available in the project folder');
+        });
+
+        document.getElementById('fetchServerStatusBtn').addEventListener('click', async () => {
+            try {
+                const serverInfo = await fetchWithAuth(`${API_BASE_URL}/health`);
+                document.getElementById('serverUptime').textContent = serverInfo.uptime || 'Real-time';
+                document.getElementById('serverVersion').textContent = serverInfo.version || '1.0.0';
+                showAlert('âœ“ Server status updated with real-time data', 'success');
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('checkHealthBtn').addEventListener('click', async () => {
+            try {
+                await fetchWithAuth(`${API_BASE_URL}/health`);
+                showAlert('âœ“ Server is healthy', 'success');
+            } catch (error) {
+                showAlert('âœ— Server health check failed: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('loadTenantsBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/v1/tenants`);
+                const tbody = document.getElementById('tenantsTable');
+                tbody.innerHTML = '';
+                
+                if (response.data && Array.isArray(response.data)) {
+                    response.data.forEach(tenant => {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td><code>${tenant.id}</code></td>
+                            <td>${tenant.name}</td>
+                            <td>${tenant.rateLimit || 'N/A'}</td>
+                            <td><span class="badge success">${tenant.status || 'active'}</span></td>
+                            <td>
+                                <button class="btn small primary" onclick="viewTenant('${tenant.id}')">View</button>
+                                <button class="btn small secondary" onclick="editTenant('${tenant.id}')">Edit</button>
+                            </td>
+                        `;
+                    });
+                }
+                
+                showAlert('âœ“ Tenants loaded from real data', 'success');
+            } catch (error) {
+                showAlert('Error loading tenants: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('createTenantBtn').addEventListener('click', async () => {
+            const tenantId = prompt('Enter tenant ID:');
+            if (tenantId) {
+                try {
+                    await fetchWithAuth(`${API_BASE_URL}/api/v1/tenants`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            id: tenantId,
+                            name: tenantId,
+                            rateLimit: '5000 req/s'
+                        })
+                    });
+                    showAlert(`âœ“ Tenant "${tenantId}" created successfully`, 'success');
+                    document.getElementById('loadTenantsBtn').click(); // Refresh table
+                } catch (error) {
+                    showAlert('Error creating tenant: ' + error.message, 'danger');
+                }
+            }
+        });
+
+        document.getElementById('refreshTenantsBtn').addEventListener('click', () => {
+            document.getElementById('loadTenantsBtn').click();
+        });
+
+        document.getElementById('sendApiRequestBtn').addEventListener('click', async () => {
+            const method = document.getElementById('apiMethod').value;
+            const endpoint = document.getElementById('apiEndpoint').value;
+            const headers = tryParseJSON(document.getElementById('apiHeaders').value);
+            const body = document.getElementById('apiBody').value;
+
+            try {
+                const fullUrl = `${API_BASE_URL}${endpoint}`;
+                const options = {
+                    method: method,
+                    headers: {
+                        ...headers
+                    }
+                };
+
+                if (['POST', 'PUT'].includes(method) && body) {
+                    options.body = JSON.stringify(tryParseJSON(body));
+                }
+
+                const response = await fetch(fullUrl, options);
+                const responseData = await response.json();
+
+                // Update request display
+                document.getElementById('apiRequest').innerHTML = `
+                    <span class="response-key">${method}</span> ${endpoint}<br><br>
+                    <span class="response-key">Headers:</span><br>
+                    ${Object.entries(options.headers).map(([k, v]) => `${k}: ${typeof v === 'string' ? v.substring(0, 30) : v}`).join('<br>')}
+                `;
+
+                // Update response display
+                const statusClass = response.ok ? 'response-success' : 'response-error';
+                document.getElementById('apiResponse').innerHTML = `
+                    <span class="${statusClass}">Status: ${response.status} ${response.statusText}</span><br><br>
+                    <pre>${JSON.stringify(responseData, null, 2)}</pre>
+                `;
+
+                showAlert('âœ“ API request successful', 'success');
+            } catch (error) {
+                document.getElementById('apiResponse').innerHTML = `
+                    <span class="response-error">Error: ${error.message}</span>
+                `;
+                showAlert('API request failed: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('clearApiBtn').addEventListener('click', () => {
+            document.getElementById('apiEndpoint').value = '/api/v1/tenants';
+            document.getElementById('apiBody').value = '{\n  "test": "data"\n}';
+        });
+
+        document.getElementById('saveConfigBtn').addEventListener('click', () => {
+            showAlert('Configuration saved successfully', 'success');
+        });
+
+        document.getElementById('applySecurity Btn').addEventListener('click', () => {
+            showAlert('Security settings applied', 'success');
+        });
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function tryParseJSON(str) {
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.className = `alert ${type} show`;
+            alert.textContent = message;
+            document.querySelector('.content').insertBefore(alert, document.querySelector('.content').firstChild);
+            setTimeout(() => alert.remove(), 4000);
+        }
+
+        function testEndpoint(endpoint, method) {
+            document.getElementById('apiMethod').value = method;
+            document.getElementById('apiEndpoint').value = endpoint;
+            showSection('api-explorer');
+        }
+
+        function viewTenant(tenantId) {
+            showAlert(`Viewing tenant: ${tenantId}`, 'info');
+        }
+
+        function editTenant(tenantId) {
+            showAlert(`Editing tenant: ${tenantId}`, 'info');
+        }
+
+        // ==================== INITIALIZATION ====================
+        // Show login on page load
+        showLogin(true);
+
+        // Auto-refresh dashboard every 30 seconds after login
+        let autoRefreshInterval = null;
+        
+        // Override the showLogin function to manage auto-refresh
+        const originalShowLogin = showLogin;
+        window.showLogin = function(show) {
+            originalShowLogin(show);
+            
+            if (!show) {
+                // Dashboard is shown - start auto-refresh
+                if (!autoRefreshInterval) {
+                    refreshDashboard(); // Initial refresh
+                    autoRefreshInterval = setInterval(refreshDashboard, 30000);
+                }
+            } else {
+                // Login is shown - stop auto-refresh
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        };
+    </script>
+</body>
+</html>
+

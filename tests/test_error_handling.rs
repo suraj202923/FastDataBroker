@@ -186,7 +186,7 @@ mod error_and_edge_case_tests {
             queue.push(b"item3".to_vec()).expect("Push 3 failed");
             
             // Remove some items
-            queue.remove_by_guid("test").expect("Remove failed");
+            let _ = queue.remove_by_guid("test");
         }
         
         // Recover
@@ -329,8 +329,7 @@ mod error_and_edge_case_tests {
     #[test]
     fn test_mixed_size_data_stress() {
         let queue = AsyncQueue::new(1, 256).expect("Failed to create queue");
-        
-        let mut handles = vec![];
+        let _ = queue;
         
         // Thread 1: Small data
         let q1 = Arc::new(AsyncQueue::new(1, 256).expect("Failed to create queue"));

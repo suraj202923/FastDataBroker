@@ -5,7 +5,9 @@ use std::path::PathBuf;
 use std::fs;
 use std::io::Write;
 use uuid::Uuid;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use dashmap::DashMap;
+use smallvec::{SmallVec, smallvec};
 
 /// Execution mode for the queue
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -87,11 +89,11 @@ pub struct AsyncQueue {
     /// Flag to signal workers to stop
     is_closed: Arc<AtomicUsize>, // Using 1=closed, 0=open
     
-    /// GUID to item ID mapping
-    guid_index: Arc<Mutex<HashMap<String, u64>>>,
+    /// GUID to item ID mapping (lock-free with DashMap)
+    guid_index: Arc<DashMap<String, u64>>,
     
-    /// Removed GUIDs (to skip processing)
-    removed_guids: Arc<Mutex<HashSet<String>>>,
+    /// Removed GUIDs (to skip processing, using DashMap with unit value)
+    removed_guids: Arc<DashMap<String, ()>>,
     
     /// Persistence settings
     persistence_enabled: bool,
@@ -130,8 +132,10 @@ impl AsyncQueue {
             error_count: Arc::new(AtomicU64::new(0)),
             removed_count: Arc::new(AtomicU64::new(0)),
             mode: Arc::new(Mutex::new(execution_mode)),
-            is_closed: Arc::new(AtomicUsize::new(0)),            guid_index: Arc::new(Mutex::new(HashMap::new())),
-            removed_guids: Arc::new(Mutex::new(HashSet::new())),            persistence_enabled: false,
+            is_closed: Arc::new(AtomicUsize::new(0)),
+            guid_index: Arc::new(DashMap::new()),
+            removed_guids: Arc::new(DashMap::new()),
+            persistence_enabled: false,
             persistence_path: None,
         })
     }
@@ -175,8 +179,8 @@ impl AsyncQueue {
             removed_count: Arc::new(AtomicU64::new(0)),
             mode: Arc::new(Mutex::new(execution_mode)),
             is_closed: Arc::new(AtomicUsize::new(0)),
-            guid_index: Arc::new(Mutex::new(HashMap::new())),
-            removed_guids: Arc::new(Mutex::new(HashSet::new())),
+            guid_index: Arc::new(DashMap::new()),
+            removed_guids: Arc::new(DashMap::new()),
             persistence_enabled: true,
             persistence_path: Some(path),
         };
@@ -199,11 +203,8 @@ impl AsyncQueue {
         let guid = Uuid::new_v4().to_string();
         let item = QueueItem { id, guid: guid.clone(), data };
         
-        // Add to GUID index
-        {
-            let mut index = self.guid_index.lock().unwrap();
-            index.insert(guid.clone(), id);
-        }
+        // Add to GUID index (lock-free)
+        self.guid_index.insert(guid.clone(), id);
         
         self.item_queue.push(item);
         Ok(guid)
@@ -215,7 +216,8 @@ impl AsyncQueue {
             return Err("Queue is closed".to_string());
         }
 
-        let mut guids = Vec::with_capacity(items.len());
+        // Use SmallVec for better performance on small batch sizes (up to 32)
+        let mut guids: SmallVec<[String; 32]> = SmallVec::with_capacity(items.len());
         let mut index_updates = HashMap::new();
         
         for data in items {
@@ -226,27 +228,22 @@ impl AsyncQueue {
             index_updates.insert(guid, id);
         }
         
-        // Add all to GUID index
-        {
-            let mut index = self.guid_index.lock().unwrap();
-            index.extend(index_updates);
+        // Add all to GUID index (lock-free)
+        for (guid, id) in index_updates {
+            self.guid_index.insert(guid, id);
         }
         
-        Ok(guids)
+        Ok(guids.to_vec())
     }
     
     /// Remove item by GUID (before it's processed)
     pub fn remove_by_guid(&self, guid: &str) -> bool {
-        // Remove from index
-        let removed = {
-            let mut index = self.guid_index.lock().unwrap();
-            index.remove(guid).is_some()
-        };
+        // Remove from index (lock-free)
+        let removed = self.guid_index.remove(guid).is_some();
         
         // Add to removed set (workers will skip it)
         if removed {
-            let mut removed_set = self.removed_guids.lock().unwrap();
-            removed_set.insert(guid.to_string());
+            self.removed_guids.insert(guid.to_string(), ());
             self.removed_count.fetch_add(1, Ordering::AcqRel);
         }
         
@@ -255,8 +252,7 @@ impl AsyncQueue {
     
     /// Check if GUID is still active (not removed)
     pub fn is_guid_active(&self, guid: &str) -> bool {
-        let removed_set = self.removed_guids.lock().unwrap();
-        !removed_set.contains(guid)
+        !self.removed_guids.contains_key(guid)
     }
 
     /// Get the current mode (0 for Sequential, 1 for Parallel)
@@ -319,7 +315,8 @@ impl AsyncQueue {
 
     /// Get multiple results in batch (non-blocking)
     pub fn get_batch(&self, max_items: usize) -> Vec<ProcessedResult> {
-        let mut results = Vec::with_capacity(max_items);
+        // Use SmallVec for batches up to 32 items (common batch size)
+        let mut results: SmallVec<[ProcessedResult; 32]> = SmallVec::with_capacity(max_items.min(32));
         for _ in 0..max_items {
             match self.result_queue.pop() {
                 Some(result) => {
@@ -329,7 +326,7 @@ impl AsyncQueue {
                 None => break,
             }
         }
-        results
+        results.to_vec()
     }
 
     /// Block and get a processed result (uses spin-wait with backoff)
@@ -430,11 +427,8 @@ impl AsyncQueue {
                         continue;
                     }
                     Some(item) => {
-                        // Check if this item was removed
-                        let is_removed = {
-                            let removed_set = removed_guids.lock().unwrap();
-                            removed_set.contains(&item.guid)
-                        };
+                        // Check if this item was removed (lock-free)
+                        let is_removed = removed_guids.contains_key(&item.guid);
                         
                         if !is_removed {
                             active_workers.fetch_add(1, Ordering::AcqRel);
@@ -467,11 +461,8 @@ impl AsyncQueue {
                         continue;
                     }
                     Some(item) => {
-                        // Check if this item was removed
-                        let is_removed = {
-                            let removed_set = removed_guids.lock().unwrap();
-                            removed_set.contains(&item.guid)
-                        };
+                        // Check if this item was removed (lock-free)
+                        let is_removed = removed_guids.contains_key(&item.guid);
                         
                         if !is_removed {
                             active_workers.fetch_add(1, Ordering::AcqRel);
@@ -525,11 +516,8 @@ impl AsyncQueue {
                             continue;
                         }
                         Some(item) => {
-                            // Check if this item was removed
-                            let is_removed = {
-                                let removed_set = removed_guids.lock().unwrap();
-                                removed_set.contains(&item.guid)
-                            };
+                            // Check if this item was removed (lock-free)
+                            let is_removed = removed_guids.contains_key(&item.guid);
                             
                             if !is_removed {
                                 active_workers.fetch_add(1, Ordering::AcqRel);
@@ -565,11 +553,8 @@ impl AsyncQueue {
                             continue;
                         }
                         Some(item) => {
-                            // Check if this item was removed
-                            let is_removed = {
-                                let removed_set = removed_guids.lock().unwrap();
-                                removed_set.contains(&item.guid)
-                            };
+                            // Check if this item was removed (lock-free)
+                            let is_removed = removed_guids.contains_key(&item.guid);
                             
                             if !is_removed {
                                 active_workers.fetch_add(1, Ordering::AcqRel);

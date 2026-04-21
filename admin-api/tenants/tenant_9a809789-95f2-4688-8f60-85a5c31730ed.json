@@ -1,0 +1,13 @@
+{
+  "tenant_id": "tenant_9a809789-95f2-4688-8f60-85a5c31730ed",
+  "name": "Demo Company",
+  "email": "admin@democompany.com",
+  "api_key": "fe5298af-c619-4771-a83d-b63d64a48773",
+  "status": "active",
+  "max_message_size": 10485760,
+  "rate_limit_rps": 1000,
+  "max_connections": 100,
+  "retention_days": 30,
+  "created_at": "2026-04-13T04:26:42.799002200+00:00",
+  "updated_at": "2026-04-13T04:26:42.799002200+00:00"
+}

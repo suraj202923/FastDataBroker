@@ -1,4 +1,4 @@
-﻿//! Core Post Office Services - Phase 2
+//! Core Post Office Services - Phase 2
 //!
 //! Services for message ingestion, routing, storage, delivery, and priority management
 

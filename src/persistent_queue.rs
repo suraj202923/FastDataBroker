@@ -145,14 +145,15 @@ impl AsyncPersistenceQueue {
     /// * `mode` - 0 for Sequential, 1 for Parallel
     /// * `_buffer_size` - Ignored (SegQueue is unbounded), kept for API compatibility
     /// * `storage_path` - Path to Sled database directory (e.g., "./queue_storage")
+    /// * `auto_restore` - If true, restore pending state from disk
     ///
     /// # Example
     ///
     /// ```
-    /// let queue = AsyncPersistenceQueue::new(1, 128, "./queue_storage")
+    /// let queue = AsyncPersistenceQueue::new(1, 128, "./queue_storage", true)
     ///     .expect("Failed to create persistent queue");
     /// ```
-    pub fn new(mode: u8, _buffer_size: usize, storage_path: &str) -> Result<Self, String> {
+    pub fn new(mode: u8, _buffer_size: usize, storage_path: &str, auto_restore: bool) -> Result<Self, String> {
         let execution_mode = ExecutionMode::from_int(mode);
         let path = PathBuf::from(storage_path);
 
@@ -187,8 +188,10 @@ impl AsyncPersistenceQueue {
             wal_threshold: 1000, // Phase 3: Flush WAL when > 1000 items
         };
 
-        // Restore pending items and counter from Sled
-        queue.restore_from_disk()?;
+        // Optionally restore pending items and counters from Sled.
+        if auto_restore {
+            queue.restore_from_disk()?;
+        }
 
         Ok(queue)
     }

@@ -6,6 +6,23 @@ pub use queue::*;
 pub use persistent_queue::*;
 pub use priority_queue::*;
 
+// Configuration and Multi-Tenancy
+pub mod config;
+
+// Performance Optimization - Phase 1
+pub mod connection_pool;
+
+// Performance Optimization - Phase 2: Serialization
+pub mod serialization;
+
+// Performance Optimization - Phase 3: Object Pooling, Caching, Batch Processing
+pub mod object_pool;
+pub mod caching;
+pub mod batch_processor;
+
+// Performance Optimization - Logging: Optimized multi-tier logging system
+pub mod logging;
+
 // Post Office Architecture modules (Phase 1+)
 pub mod models;
 pub mod transport;
@@ -27,6 +44,13 @@ pub mod prelude {
     pub use crate::resilience::*;
     pub use crate::security::*;
     pub use crate::distribution::*;
+    pub use crate::config::*;
+    pub use crate::connection_pool::*;
+    pub use crate::serialization::*;
+    pub use crate::object_pool::*;
+    pub use crate::caching::*;
+    pub use crate::batch_processor::*;
+    pub use crate::logging::*;
 }
 
 use pyo3::prelude::*;
@@ -459,8 +483,8 @@ impl PyAsyncPersistenceQueue {
     ///     storage_path: Path to Sled database (default: "./queue_storage")
     #[new]
     #[pyo3(signature = (mode = 1, buffer_size = 128, storage_path = "./queue_storage"))]
-    fn new(mode: u8, buffer_size: usize, storage_path: &str) -> PyResult<Self> {
-        let queue = AsyncPersistenceQueue::new(mode, buffer_size, storage_path)
+        fn new(mode: u8, buffer_size: usize, storage_path: &str) -> PyResult<Self> {
+            let queue = AsyncPersistenceQueue::new(mode, buffer_size, storage_path, true)
             .map_err(|e| PyTypeError::new_err(e))?;
         Ok(PyAsyncPersistenceQueue { inner: queue })
     }

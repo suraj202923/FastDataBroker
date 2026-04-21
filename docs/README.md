@@ -11,6 +11,8 @@ Complete documentation for FastDataBroker - a high-performance distributed messa
 
 ### Development & Testing
 - [Testing Guide](TESTING.md) - Comprehensive testing framework and guidelines
+- [SDK Comprehensive Testing](../SDK_TESTING_COMPLETE_v2.0.md) - NEW: 260+ SDK test suite 
+- [Test Runner Guide](../TEST_RUNNER_GUIDE.md) - How to run all SDK tests
 - [Performance Benchmarks](PERFORMANCE.md) - Latency, throughput, and scalability metrics
 - [API Documentation](API_REFERENCE.md) - Complete API reference for all SDKs
 
@@ -30,6 +32,8 @@ Complete documentation for FastDataBroker - a high-performance distributed messa
 |----------|---------|----------|
 | ARCHITECTURE.md | System design and components | Developers, DevOps |
 | TESTING.md | Test framework and test cases | QA, Developers |
+| ../SDK_TESTING_COMPLETE_v2.0.md | 260+ comprehensive SDK test suite | QA, Developers |
+| ../TEST_RUNNER_GUIDE.md | How to run all SDK tests | QA, Developers |
 | DEPLOYMENT.md | Production deployment | DevOps, SRE |
 | PERFORMANCE.md | Performance metrics and comparisons | Architects, DevOps |
 | SDK_USAGE.md | SDK usage for all languages | Developers |
@@ -57,9 +61,11 @@ Complete documentation for FastDataBroker - a high-performance distributed messa
 ✅ **Phase 4**: Live streaming API and WebSocket support
 ✅ **Phase 5**: Performance optimization and benchmarking
 ✅ **Phase 6**: Multi-server clustering and replication
-✅ **Phase 7**: Comprehensive testing and validation
+✅ **Phase 7**: Comprehensive testing and validation (246+ tests)
+✅ **Phase 11**: Comprehensive SDK Test Suite v2.0 (260+ tests, 12 categories)
 
 **Status**: Production Ready ✅
+**Test Coverage**: 500+ total tests across core + SDKs
 
 ## Repository Structure
 

@@ -225,7 +225,7 @@ mod benchmark_tests {
                  batch_size, avg_latency, min_latency, max_latency);
 
         // Batch should be faster per item
-        assert!(avg_latency / batch_size as u32 < Duration::from_micros(50));
+        assert!(avg_latency / (batch_size as u32) < Duration::from_micros(50));
     }
 
     // ============== Concurrent Throughput ==============

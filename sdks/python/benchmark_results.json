@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-04-12T13:00:21.152857",
+  "handshake_ms": 0.3001806640625,
+  "throughput_count": 300,
+  "concurrent_tenants": 10,
+  "peak_memory_mb": 21.87109375,
+  "stability_percent": 100.0
+}

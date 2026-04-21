@@ -268,4 +268,102 @@ mod tests {
         service.store(&envelope2).await.unwrap();
         assert_eq!(service.count().await, 2);
     }
+
+    #[tokio::test]
+    async fn test_storage_ttl_expiration() {
+        let service = StorageService::new();
+        
+        // Create envelope with 1 second TTL
+        let mut envelope = Envelope::new(
+            "producer-1".to_string(),
+            vec!["recipient-1".to_string()],
+            "Test TTL".to_string(),
+            vec![],
+        );
+        envelope.ttl_seconds = Some(1);
+        
+        let msg_id = envelope.id.to_string();
+        service.store(&envelope).await.unwrap();
+        
+        // Should be retrievable immediately
+        let retrieved = service.retrieve(&msg_id).await.unwrap();
+        assert!(retrieved.is_some());
+        
+        // Wait for TTL to expire
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        
+        // Now it should be expired when we cleanup
+        let deleted = service.cleanup_expired().await.unwrap();
+        assert_eq!(deleted, 1);
+        
+        // Verify it's gone
+        let retrieved = service.retrieve(&msg_id).await.unwrap();
+        assert!(retrieved.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_storage_concurrent_operations() {
+        use std::sync::Arc;
+        
+        let service = Arc::new(StorageService::new());
+        let mut handles = vec![];
+        
+        // Spawn 5 threads that each store messages
+        for i in 0..5 {
+            let service_clone = Arc::clone(&service);
+            let handle = tokio::spawn(async move {
+                for j in 0..10 {
+                    let envelope = Envelope::new(
+                        format!("producer-{}", i),
+                        vec![format!("recipient-{}", i)],
+                        format!("Message {}-{}", i, j),
+                        vec![],
+                    );
+                    service_clone.store(&envelope).await.unwrap();
+                }
+            });
+            handles.push(handle);
+        }
+        
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.await.unwrap();
+        }
+        
+        // Should have 50 messages total (5 threads * 10 messages)
+        assert_eq!(service.count().await, 50);
+        
+        let stats = service.stats();
+        assert_eq!(stats.total_stored.load(std::sync::atomic::Ordering::Relaxed), 50);
+    }
+
+    #[tokio::test]
+    async fn test_storage_multiple_retrieval() {
+        let service = StorageService::new();
+        
+        // Store multiple messages
+        let mut envelopes = vec![];
+        for i in 0..5 {
+            let envelope = Envelope::new(
+                "producer-1".to_string(),
+                vec!["recipient-1".to_string()],
+                format!("Message {}", i),
+                vec![],
+            );
+            envelopes.push(envelope);
+        }
+        
+        for envelope in &envelopes {
+            service.store(envelope).await.unwrap();
+        }
+        
+        assert_eq!(service.count().await, 5);
+        
+        // Retrieve each one
+        for envelope in &envelopes {
+            let retrieved = service.retrieve(&envelope.id.to_string()).await.unwrap();
+            assert!(retrieved.is_some());
+            assert_eq!(retrieved.unwrap().id, envelope.id);
+        }
+    }
 }

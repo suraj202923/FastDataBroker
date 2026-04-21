@@ -5,9 +5,9 @@ FastDataBroker Python SDK setup configuration
 from setuptools import setup, find_packages
 import os
 
-# Try to read README from multiple locations
+# Read README from python directory first, then fall back to project root
 readme_path = None
-for path in ["README.md", "../README.md", "../../README.md"]:
+for path in ["README.md", "python/README.md", "../README.md", "../../README.md"]:
     if os.path.exists(path):
         readme_path = path
         break
@@ -16,11 +16,32 @@ if readme_path:
     with open(readme_path, "r", encoding="utf-8") as fh:
         long_description = fh.read()
 else:
-    long_description = "FastDataBroker SDK for Python - Advanced messaging system with multi-channel notifications"
+    # Fallback description
+    long_description = """
+# FastDataBroker Python SDK
+
+Ultra-fast distributed message queue SDK for Python - 2-3ms latency, 912K msg/sec, zero message loss guarantee.
+
+## Quick Start
+
+```python
+from fastdatabroker_sdk import Producer, Consumer, ClusterClient
+
+client = ClusterClient(['broker1:8080', 'broker2:8081', 'broker3:8082', 'broker4:8083'])
+producer = Producer(client)
+result = producer.send(key='order-123', value={'amount': 100.00}, priority='HIGH')
+
+consumer = Consumer(client, group_id='order-processors')
+for message in consumer.consume():
+    print(f"Received: {message.value}")
+```
+
+For complete documentation, see: https://github.com/suraj202923/FastDataBroker
+"""
 
 setup(
     name="FastDataBroker-sdk",
-    version="0.1.15",
+    version="0.1.16",
     author="FastDataBroker Team",
     author_email="suraj202923@gmail.com",
     description="FastDataBroker SDK for Python - Advanced messaging system with multi-channel notifications",
@@ -39,7 +60,7 @@ setup(
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: MIT License",
+        "License :: Other/Proprietary License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -83,7 +104,8 @@ setup(
         "quic",
         "async",
     ],
-    license="MIT",
+    license="LicenseRef-FDB-DevTest-Only",
     zip_safe=False,
     include_package_data=True,
 )
+

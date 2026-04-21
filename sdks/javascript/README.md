@@ -2,9 +2,9 @@
 
 JavaScript/TypeScript SDK for FastDataBroker - A high-performance distributed message queue with built-in clustering and QUIC protocol support.
 
-**Version:** 0.1.15
+**Version:** 0.1.16
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -17,19 +17,19 @@ JavaScript/TypeScript SDK for FastDataBroker - A high-performance distributed me
 
 ## Features
 
-- 🚀 **Promise-Based Async/Await** - Modern async/await and Promise support
-- 📨 **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
-- 🎯 **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
-- 🔄 **Message Confirmation** - Optional delivery confirmation
-- 🏷️ **Message Tagging** - Tag messages for categorization
-- ⏱️ **TTL Support** - Set time-to-live for messages
-- 🔌 **WebSocket Support** - Real-time bidirectional communication
-- 🪝 **Webhook Endpoints** - Integrate with external systems
-- 🌐 **QUIC Protocol** - High-performance UDP-based protocol
-- 🔐 **Clustering Support** - Multi-region failover and load balancing
-- 📦 **TypeScript Support** - Full type definitions included
-- 🎯 **Event Emitters** - Node.js EventEmitter pattern support
-- ⚙️ **Node.js & Browser** - Works in both environments
+- ðŸš€ **Promise-Based Async/Await** - Modern async/await and Promise support
+- ðŸ“¨ **Multi-Channel Delivery** - Email, WebSocket, Push Notifications, Webhooks
+- ðŸŽ¯ **Priority Levels** - 5 priority levels: Deferred, Normal, High, Urgent, Critical
+- ðŸ”„ **Message Confirmation** - Optional delivery confirmation
+- ðŸ·ï¸ **Message Tagging** - Tag messages for categorization
+- â±ï¸ **TTL Support** - Set time-to-live for messages
+- ðŸ”Œ **WebSocket Support** - Real-time bidirectional communication
+- ðŸª **Webhook Endpoints** - Integrate with external systems
+- ðŸŒ **QUIC Protocol** - High-performance UDP-based protocol
+- ðŸ” **Clustering Support** - Multi-region failover and load balancing
+- ðŸ“¦ **TypeScript Support** - Full type definitions included
+- ðŸŽ¯ **Event Emitters** - Node.js EventEmitter pattern support
+- âš™ï¸ **Node.js & Browser** - Works in both environments
 
 ## Installation
 
@@ -105,7 +105,7 @@ const message = {
 };
 
 const result = await client.sendMessage(message);
-console.log(`✓ Message sent: ${result.messageId}`);
+console.log(`âœ“ Message sent: ${result.messageId}`);
 console.log(`  Status: ${result.status}`);
 console.log(`  Delivered channels: ${result.deliveredChannels}`);
 ```
@@ -133,7 +133,7 @@ async function priorityExample() {
     };
 
     const result1 = await client.sendMessage(criticalMsg);
-    console.log(`✓ Critical message sent: ${result1.messageId}`);
+    console.log(`âœ“ Critical message sent: ${result1.messageId}`);
 
     // Urgent priority message
     const urgentMsg = {
@@ -145,7 +145,7 @@ async function priorityExample() {
     };
 
     const result2 = await client.sendMessage(urgentMsg);
-    console.log(`✓ Urgent message sent: ${result2.messageId}`);
+    console.log(`âœ“ Urgent message sent: ${result2.messageId}`);
 
     // Normal priority message
     const normalMsg = {
@@ -157,7 +157,7 @@ async function priorityExample() {
     };
 
     const result3 = await client.sendMessage(normalMsg);
-    console.log(`✓ Normal message sent: ${result3.messageId}`);
+    console.log(`âœ“ Normal message sent: ${result3.messageId}`);
 
     // Deferred priority message
     const deferredMsg = {
@@ -169,7 +169,7 @@ async function priorityExample() {
     };
 
     const result4 = await client.sendMessage(deferredMsg);
-    console.log(`✓ Deferred message sent: ${result4.messageId}`);
+    console.log(`âœ“ Deferred message sent: ${result4.messageId}`);
   } finally {
     await client.disconnect();
   }
@@ -208,9 +208,9 @@ async function batchExample() {
     for (const msg of messages) {
       try {
         const result = await client.sendMessage(msg);
-        console.log(`✓ Message sent - ID: ${result.messageId}, TTL: ${msg.ttlSeconds}s`);
+        console.log(`âœ“ Message sent - ID: ${result.messageId}, TTL: ${msg.ttlSeconds}s`);
       } catch (error) {
-        console.error(`✗ Failed: ${error.message}`);
+        console.error(`âœ— Failed: ${error.message}`);
       }
     }
   } finally {
@@ -248,7 +248,7 @@ async function taggedExample() {
     };
 
     const result = await client.sendMessage(message);
-    console.log(`✓ Tagged message sent: ${result.messageId}`);
+    console.log(`âœ“ Tagged message sent: ${result.messageId}`);
     console.log('  Tags:');
     Object.entries(message.tags).forEach(([key, value]) => {
       console.log(`    - ${key}: ${value}`);
@@ -271,7 +271,7 @@ async function webSocketExample() {
 
   try {
     await wsClient.connect();
-    console.log('✓ WebSocket client connected');
+    console.log('âœ“ WebSocket client connected');
 
     // Send message via WebSocket
     const message = {
@@ -283,15 +283,15 @@ async function webSocketExample() {
     };
 
     const result = await wsClient.sendMessage(message);
-    console.log(`✓ Message sent via WebSocket: ${result.messageId}`);
+    console.log(`âœ“ Message sent via WebSocket: ${result.messageId}`);
 
     // Listen for messages using event emitter
     wsClient.on('message', (message) => {
-      console.log(`✓ Received: ${message.subject}`);
+      console.log(`âœ“ Received: ${message.subject}`);
     });
 
     wsClient.on('error', (error) => {
-      console.error(`✗ WebSocket error: ${error.message}`);
+      console.error(`âœ— WebSocket error: ${error.message}`);
     });
 
     // Subscribe to specific user messages
@@ -449,7 +449,7 @@ async function completeExample() {
     // 1. Connection
     console.log('1. Connecting to FastDataBroker...');
     await client.connect();
-    console.log('✓ Connected successfully\n');
+    console.log('âœ“ Connected successfully\n');
 
     // 2. Send critical message
     console.log('2. Sending critical priority message...');
@@ -469,7 +469,7 @@ async function completeExample() {
 
     const result1 = await client.sendMessage(criticalMsg);
     const duration = Date.now() - start;
-    console.log(`✓ Message sent: ${result1.messageId} (took ${duration}ms)`);
+    console.log(`âœ“ Message sent: ${result1.messageId} (took ${duration}ms)`);
     console.log(`  Status: ${result1.status}`);
     console.log();
 
@@ -485,7 +485,7 @@ async function completeExample() {
         ttlSeconds: 7200,
       };
       const res = await client.sendMessage(msg);
-      console.log(`  ✓ Message ${i + 1}: ${res.messageId}`);
+      console.log(`  âœ“ Message ${i + 1}: ${res.messageId}`);
     }
     console.log();
 
@@ -502,8 +502,8 @@ async function completeExample() {
       };
       asyncPromises.push(
         client.sendMessage(msg)
-          .then(res => console.log(`  ✓ Async message sent: ${res.messageId}`))
-          .catch(err => console.error(`  ✗ Error: ${err.message}`))
+          .then(res => console.log(`  âœ“ Async message sent: ${res.messageId}`))
+          .catch(err => console.error(`  âœ— Error: ${err.message}`))
       );
     }
     await Promise.all(asyncPromises);
@@ -511,17 +511,17 @@ async function completeExample() {
 
     // 5. Statistics
     console.log('5. Final Statistics:');
-    console.log('  ✓ All messages sent successfully');
-    console.log('  ✓ Client connected');
+    console.log('  âœ“ All messages sent successfully');
+    console.log('  âœ“ Client connected');
 
     // 6. Cleanup
     console.log('\n6. Cleaning up...');
     await client.disconnect();
-    console.log('✓ Disconnected\n');
+    console.log('âœ“ Disconnected\n');
 
     console.log('=== Example completed successfully ===');
   } catch (error) {
-    console.error(`✗ Error occurred: ${error.message}`);
+    console.error(`âœ— Error occurred: ${error.message}`);
     console.error(error.stack);
   }
 }
@@ -653,6 +653,43 @@ stream.on('error', (error) => {
   console.error('Stream error:', error.message);
 });
 ```
+
+## Testing
+
+### Unit Tests
+
+```bash
+npm test
+```
+
+### Comprehensive SDK Test Suite
+
+This SDK is part of the comprehensive FastDataBroker test suite with **260+ test cases** across 4 languages.
+
+**JavaScript/TypeScript SDK Tests**: 60+ test cases covering:
+- âœ“ Connection management (6 tests)
+- âœ“ Message operations (6 tests)
+- âœ“ Priority handling (5 tests)
+- âœ“ Error handling (8+ tests)
+- âœ“ Async/await patterns (8+ tests with Promise support)
+- âœ“ Concurrency with Promise.all() (multiple parallel tests)
+- âœ“ Performance benchmarks (latency, throughput)
+- âœ“ Integration scenarios (4 tests)
+- âœ“ Full TypeScript support with type checking
+
+**Run all SDK tests**:
+```bash
+# From workspace root - Run all 260+ tests across all SDKs
+python run_all_sdk_tests.py
+
+# Run just JavaScript SDK tests
+cd sdks/javascript
+npm test                    # 60+ comprehensive Jest tests with TypeScript
+npm test -- --coverage     # With coverage report
+```
+
+ðŸ“– See [TEST_RUNNER_GUIDE.md](../../TEST_RUNNER_GUIDE.md) for detailed testing instructions
+ðŸ“„ See [SDK_TESTING_COMPLETE_v2.0.md](../../SDK_TESTING_COMPLETE_v2.0.md) for full test suite overview
 
 ## Advanced Features
 
@@ -812,7 +849,7 @@ Contributions are welcome! Please:
 
 ## Changelog
 
-### Version 0.1.15 (Latest)
+### Version 0.1.16 (Latest)
 - Enhanced documentation with 8 complete examples
 - WebSocket streaming integration
 - Event emitter support
@@ -828,3 +865,4 @@ Contributions are welcome! Please:
 - Priority-based message routing
 - TTL and tagging support
 - QUIC protocol integration
+

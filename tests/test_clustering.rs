@@ -24,7 +24,7 @@ mod clustering_tests {
         Stopping,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq)]
     struct BrokerMetadata {
         broker_id: u32,
         host: String,
@@ -76,7 +76,9 @@ mod clustering_tests {
 
         async fn get_all_brokers(&self) -> Vec<BrokerMetadata> {
             let brokers = self.brokers.read().await;
-            brokers.values().cloned().collect()
+            let mut out: Vec<BrokerMetadata> = brokers.values().cloned().collect();
+            out.sort_by_key(|b| b.broker_id);
+            out
         }
 
         async fn create_stream(
@@ -86,7 +88,8 @@ mod clustering_tests {
             replication_factor: u32,
         ) -> Result<StreamMetadata, String> {
             let brokers = self.brokers.read().await;
-            let broker_ids: Vec<u32> = brokers.keys().cloned().collect();
+            let mut broker_ids: Vec<u32> = brokers.keys().cloned().collect();
+            broker_ids.sort_unstable();
 
             if broker_ids.is_empty() {
                 return Err("No active brokers".to_string());
@@ -269,7 +272,7 @@ mod clustering_tests {
             .map(|p| p.leader_broker_id)
             .collect();
 
-        expected_leaders = vec![1, 2, 3, 4, 1, 2, 3, 4];
+        let expected_leaders = vec![1, 2, 3, 4, 1, 2, 3, 4];
         assert_eq!(leaders, expected_leaders);
     }
 

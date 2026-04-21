@@ -1,4 +1,4 @@
-﻿//! Core Post Office Services
+//! Core Post Office Services
 //!
 //! Services for message ingestion, routing, storage, and delivery
 
