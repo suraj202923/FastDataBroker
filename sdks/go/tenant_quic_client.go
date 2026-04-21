@@ -107,7 +107,7 @@ func (c *TenantQuicClient) generatePSKToken() string {
 // createHandshakeParams creates tenant-specific QUIC handshake parameters
 func (c *TenantQuicClient) createHandshakeParams() *QuicHandshakeParams {
 	timestampMS := time.Now().UnixMilli()
-	randomNonce := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d%d", rand.Int64(), timestampMS))))[:32]
+	randomNonce := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d%d", rand.Int63(), timestampMS))))[:32]
 	pskToken := c.generatePSKToken()
 
 	return &QuicHandshakeParams{

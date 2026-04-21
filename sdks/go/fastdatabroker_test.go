@@ -101,7 +101,7 @@ func TestMessageWithTTL(t *testing.T) {
 	}
 }
 
-func TestMessageWithTags(t *testing.T) {
+func TestMessageWithTags_Basic(t *testing.T) {
 	tags := map[string]string{
 		"category": "notification",
 		"source":   "api",
@@ -137,7 +137,7 @@ func TestMessageEmptyContent(t *testing.T) {
 	}
 }
 
-func TestMessageLargeContent(t *testing.T) {
+func TestMessageLargeContent_Basic(t *testing.T) {
 	largeContent := make([]byte, 10*1024*1024) // 10MB
 
 	msg := &Message{
@@ -335,7 +335,7 @@ func TestWebhookConfig(t *testing.T) {
 
 // ============== Concurrency Tests ==============
 
-func TestMultipleClients(t *testing.T) {
+func TestMultipleClients_Basic(t *testing.T) {
 	clients := make([]*Client, 5)
 
 	for i := 0; i < 5; i++ {

@@ -9,7 +9,7 @@ import (
 )
 
 // Version of the SDK
-const Version = "0.1.12"
+const Version = "0.1.16"
 
 // Priority levels for messages
 type Priority uint8
@@ -44,6 +44,7 @@ const (
 
 // Message represents a fastdatabroker message envelope
 type Message struct {
+	TenantID       string
 	SenderID       string
 	RecipientIDs   []string
 	Subject        string
@@ -57,8 +58,11 @@ type Message struct {
 // DeliveryResult represents the result of sending a message
 type DeliveryResult struct {
 	MessageID         string
+	TenantID          string
 	Status            string
 	DeliveredChannels int
+	LatencyMS         float64
+	Timestamp         int64
 	Details           map[string]interface{}
 }
 

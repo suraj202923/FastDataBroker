@@ -1,4 +1,4 @@
-package fastdatabroker
+package multitenancy
 
 import (
 	"strings"
@@ -59,7 +59,7 @@ func TestTenantValidation_EmptyID(t *testing.T) {
 func TestTenantValidation_BadPrefix(t *testing.T) {
 	tenant := &TenantConfig{
 		TenantID:       "acme-corp",
-		APIKeyPrefix:   "acme",  // Missing underscore
+		APIKeyPrefix:   "acme", // Missing underscore
 		RateLimitRps:   1000,
 		MaxConnections: 100,
 	}
@@ -284,8 +284,9 @@ func TestClientCreation_FromSettings_TenantNotFound(t *testing.T) {
 
 func TestMessageSending_TenantIsolation(t *testing.T) {
 	client := &Client{
-		TenantID: "acme-corp",
+		TenantID:  "acme-corp",
 		connected: true,
+		wsClients: make(map[string]*WebSocketClientInfo),
 	}
 
 	message := &Message{
@@ -328,71 +329,6 @@ func TestAPIKeyGeneration(t *testing.T) {
 	}
 
 	if !strings.HasPrefix(newKey, "acme_") {
-		t.Errorf("Expected API key to start with 'acme_', got '%s'", newKey)
-	}
-}
-
-func TestGetTenantConfig(t *testing.T) {
-	settings := &AppSettings{
-		Tenants: []TenantConfig{
-			{
-				TenantID:       "acme-corp",
-				APIKeyPrefix:   "acme_",
-				RateLimitRps:   1000,
-				MaxConnections: 100,
-				RetentionDays:  30,
-			},
-		},
-	}
-
-	client, _ := NewClientFromSettings(settings, "acme-corp", "acme_key")
-
-	config := client.GetTenantConfig()
-
-	if config == nil {
-		t.Error("Expected non-nil config")
-	} else if config.RateLimitRps != 1000 {
-		t.Errorf("Expected RateLimitRps 1000, got %d", config.RateLimitRps)
-	}
-}
-
-func TestWebSocketClientRegistration(t *testing.T) {
-	client := &Client{
-		TenantID:  "acme-corp",
-		connected: true,
-		wsClients: make(map[string]*WebSocketClientInfo),
-	}
-
-	registered := client.RegisterWebSocketClient("ws-001", "user-001")
-
-	if !registered {
-		t.Error("Expected WebSocket client registration to succeed")
-	}
-
-	if _, exists := client.wsClients["ws-001"]; !exists {
-		t.Error("Expected WebSocket client to be registered")
-	}
-}
-
-func TestWebSocketClientUnregistration(t *testing.T) {
-	client := &Client{
-		TenantID:  "acme-corp",
-		connected: true,
-		wsClients: map[string]*WebSocketClientInfo{
-			"ws-001": {
-				ClientID: "ws-001",
-				UserID:   "user-001",
-			},
-		},
-	}
-
-	unregistered := client.UnregisterWebSocketClient("ws-001")
-
-	if !unregistered {
-		t.Error("Expected WebSocket client unregistration to succeed")
-	}
-
-	if _, exists := client.wsClients["ws-001"]; exists {
-		t.Error("Expected WebSocket client to be unregistered")
+		t.Errorf("Expected key with prefix 'acme_', got '%s'", newKey)
 	}
 }

@@ -140,10 +140,10 @@ func (c *FastDataBrokerQuicClient) Connect() error {
 	}
 
 	c.state = StateConnecting
-	fmt.Printf("Connecting to %s:%d...\n", c.config.Host, c.config.Port)
+	fmt.Printf("Connecting to %s...\n", net.JoinHostPort(c.config.Host, fmt.Sprintf("%d", c.config.Port)))
 
 	// Dial connection
-	addr := fmt.Sprintf("%s:%d", c.config.Host, c.config.Port)
+	addr := net.JoinHostPort(c.config.Host, fmt.Sprintf("%d", c.config.Port))
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		c.state = StateError
@@ -369,8 +369,8 @@ func (c *FastDataBrokerQuicClient) SendMessagesParallel(messages []Message, numW
 		go func() {
 			defer wg.Done()
 			for msg := range msgChan {
-				result, _ := c.SendMessage(msg)
-				resultsChan <- result
+				result, _ := c.SendMessage(&msg)
+				resultsChan <- *result
 			}
 		}()
 	}
@@ -418,8 +418,8 @@ func (c *FastDataBrokerQuicClient) SendMessagesParallelWithProgress(
 		go func() {
 			defer wg.Done()
 			for msg := range msgChan {
-				result, _ := c.SendMessage(msg)
-				resultsChan <- result
+				result, _ := c.SendMessage(&msg)
+				resultsChan <- *result
 
 				progressMutex.Lock()
 				completed++

@@ -4,7 +4,7 @@ Tests all scenarios: core functionality, error handling, performance, concurrenc
 Total test cases: 60+
 */
 
-package main
+package fastdatabroker
 
 import (
 	"fmt"
@@ -27,14 +27,12 @@ type TestMessage struct {
 	Tags         map[string]string
 }
 
-type Priority int
-
 const (
-	Deferred Priority = iota + 1
-	Normal
-	High
-	Urgent
-	Critical
+	Deferred Priority = 50
+	Normal   Priority = 100
+	High     Priority = 150
+	Urgent   Priority = 200
+	Critical Priority = 255
 )
 
 type TestResult struct {
@@ -286,8 +284,6 @@ func TestSendWithoutConnecting(t *testing.T) {
 
 func TestPriorityDeferred(t *testing.T) {
 	// 2.1: DEFERRED priority
-	client := &FastDataBrokerClient{Connected: true}
-
 	msg := TestMessage{
 		SenderID:     "app1",
 		RecipientIDs: []string{"user1"},

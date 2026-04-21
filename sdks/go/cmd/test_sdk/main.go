@@ -392,12 +392,12 @@ func test9ConfigurationValidation() error {
 // ============================================================================
 
 func main() {
-	fmt.Println("\n" + string(make([]byte, 70)) + "\n")
+	fmt.Print("\n" + string(make([]byte, 70)) + "\n")
 	fmt.Println("FastDataBroker Go SDK - Test Suite")
 	for i := 0; i < 70; i++ {
 		fmt.Print("=")
 	}
-	fmt.Println("\n")
+	fmt.Print("\n")
 
 	runTest("1. Basic Connection", test1BasicConnection)
 	runTest("2. Send Message", test2SendMessage)
@@ -409,7 +409,7 @@ func main() {
 	runTest("8. Error Handling", test8ErrorHandling)
 	runTest("9. Configuration Validation", test9ConfigurationValidation)
 
-	fmt.Println("\n" + "===================================================================" + "\n")
+	fmt.Print("\n" + "===================================================================" + "\n")
 	fmt.Printf("Results: %d passed, %d failed\n", testsPassed, testsFailed)
-	fmt.Println("===================================================================" + "\n")
+	fmt.Print("===================================================================" + "\n")
 }
