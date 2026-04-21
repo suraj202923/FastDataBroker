@@ -21,7 +21,7 @@ export enum TenantRole {
 
 export interface Message {
   topic: string;
-  payload: any;
+  payload: unknown;
   priority?: number;
   ttlSeconds?: number;
   headers?: Record<string, string>;
@@ -266,7 +266,7 @@ export class TenantQuicClient {
       status: 'success',
       latencyMs: latency,
       timestamp: Date.now(),
-      tenantId: this.tenantConfig.tenantId
+      tenantId: messageWithTenant.tenantId
     };
   }
 

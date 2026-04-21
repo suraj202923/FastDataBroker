@@ -11,7 +11,7 @@ namespace FastDataBroker.SDK
     /// </summary>
     public class TenantQuicClient
     {
-        public enum ConnectionState
+        public enum QuicConnectionState
         {
             Idle,
             Handshake,
@@ -92,7 +92,7 @@ namespace FastDataBroker.SDK
         private readonly string _host;
         private readonly int _port;
         private readonly TenantConfig _tenantConfig;
-        private ConnectionState _connectionState;
+        private QuicConnectionState _connectionState;
         private bool _isAuthenticated;
         private long _handshakeStartTime;
         private long _handshakeDurationMs;
@@ -108,7 +108,7 @@ namespace FastDataBroker.SDK
             _host = host;
             _port = port;
             _tenantConfig = tenantConfig;
-            _connectionState = ConnectionState.Idle;
+            _connectionState = QuicConnectionState.Idle;
             _isAuthenticated = false;
             _stats = new Dictionary<string, long>
             {
@@ -171,7 +171,7 @@ namespace FastDataBroker.SDK
         private bool PerformTenantQuicHandshake()
         {
             _handshakeStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            _connectionState = ConnectionState.Handshake;
+            _connectionState = QuicConnectionState.Handshake;
 
             try
             {
@@ -254,7 +254,7 @@ namespace FastDataBroker.SDK
         /// </summary>
         public bool Connect()
         {
-            if (_connectionState == ConnectionState.Established)
+            if (_connectionState == QuicConnectionState.Established)
             {
                 return true;
             }
@@ -265,12 +265,12 @@ namespace FastDataBroker.SDK
             // Perform handshake
             if (!PerformTenantQuicHandshake())
             {
-                _connectionState = ConnectionState.Closed;
+                _connectionState = QuicConnectionState.Closed;
                 return false;
             }
 
             // Connection established
-            _connectionState = ConnectionState.Established;
+            _connectionState = QuicConnectionState.Established;
             _connectionStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             Console.WriteLine($"✓ Connected to {_host}:{_port}");
@@ -287,7 +287,7 @@ namespace FastDataBroker.SDK
         /// </summary>
         public DeliveryResult SendMessage(Dictionary<string, object> message)
         {
-            if (_connectionState != ConnectionState.Established)
+            if (_connectionState != QuicConnectionState.Established)
             {
                 throw new InvalidOperationException($"Connection not established (state: {_connectionState})");
             }
@@ -336,13 +336,13 @@ namespace FastDataBroker.SDK
         /// </summary>
         public ConnectionStats GetStats()
         {
-            long uptimeMs = _connectionState == ConnectionState.Established
+            long uptimeMs = _connectionState == QuicConnectionState.Established
                 ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _connectionStart
                 : 0;
 
             return new ConnectionStats
             {
-                IsConnected = _connectionState == ConnectionState.Established && _isAuthenticated,
+                IsConnected = _connectionState == QuicConnectionState.Established && _isAuthenticated,
                 MessagesSent = _stats["messages_sent"],
                 MessagesReceived = _stats["messages_received"],
                 ConnectionTimeMs = uptimeMs,
@@ -357,7 +357,7 @@ namespace FastDataBroker.SDK
         /// </summary>
         public bool IsConnected()
         {
-            return _connectionState == ConnectionState.Established && _isAuthenticated;
+            return _connectionState == QuicConnectionState.Established && _isAuthenticated;
         }
 
         /// <summary>
@@ -365,10 +365,10 @@ namespace FastDataBroker.SDK
         /// </summary>
         public void Disconnect()
         {
-            if (_connectionState != ConnectionState.Closed)
+            if (_connectionState != QuicConnectionState.Closed)
             {
-                _connectionState = ConnectionState.Closing;
-                _connectionState = ConnectionState.Closed;
+                _connectionState = QuicConnectionState.Closing;
+                _connectionState = QuicConnectionState.Closed;
                 _isAuthenticated = false;
                 Console.WriteLine($"✓ Disconnected from {_host}:{_port} (Tenant: {_tenantConfig.TenantId})");
             }
@@ -377,7 +377,7 @@ namespace FastDataBroker.SDK
         // Properties
         public string SessionToken => _sessionToken;
         public string ConnectionId => _connectionId;
-        public ConnectionState ConnectionState => _connectionState;
+        public QuicConnectionState ConnectionState => _connectionState;
 
         // Helper methods
         private string BytesToHex(byte[] bytes)

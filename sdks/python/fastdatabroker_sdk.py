@@ -569,6 +569,8 @@ class TenantQuicClient:
             raise ConnectionError("Not connected or not authenticated")
         
         return WorkerPool(self, num_workers)
+
+    def on_message(self, topic: str, handler: Callable[[Dict], None]) -> None:
         """Register message handler for topic"""
         self.message_handlers[topic] = handler
 
@@ -1006,8 +1008,7 @@ def test_parallel_scalability():
 
 def run_all_tests():
     """Run all tenant-specific tests"""
-    global tests_passed, tests_failed
-    
+
     print('\n' + '='*80)
     print('FastDataBroker Python SDK - Tenant-Specific QUIC Tests')
     print('='*80 + '\n')

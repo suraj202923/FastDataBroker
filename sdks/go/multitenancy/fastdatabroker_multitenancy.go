@@ -1,4 +1,3 @@
-// Package multitenancy provides multi-tenant support for FastDataBroker Go SDK.
 package multitenancy
 
 import (
@@ -13,22 +12,38 @@ import (
 
 const MultiTenancyVersion = "0.1.16"
 
-// generateID creates a simple unique identifier
-func generateID() string {
-	return fmt.Sprintf("msg-%d", time.Now().UnixNano())
-}
+// Priority represents message priority
+type Priority uint8
+
+const (
+	PriorityDeferred Priority = 50
+	PriorityNormal   Priority = 100
+	PriorityHigh     Priority = 150
+	PriorityUrgent   Priority = 200
+	PriorityCritical Priority = 255
+)
+
+// NotificationChannel represents delivery channels
+type NotificationChannel int
+
+const (
+	ChannelEmail NotificationChannel = iota
+	ChannelWebSocket
+	ChannelPush
+	ChannelWebhook
+)
 
 // TenantConfig represents tenant-specific configuration
 type TenantConfig struct {
-	TenantID       string                 `json:"tenant_id"`
-	TenantName     string                 `json:"tenant_name"`
-	APIKeyPrefix   string                 `json:"api_key_prefix"`
-	RateLimitRps   uint32                 `json:"rate_limit_rps"`
-	MaxConnections uint32                 `json:"max_connections"`
-	MaxMessageSize uint64                 `json:"max_message_size"`
-	RetentionDays  uint32                 `json:"retention_days"`
-	Enabled        bool                   `json:"enabled"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	TenantID        string            `json:"tenant_id"`
+	TenantName      string            `json:"tenant_name"`
+	APIKeyPrefix    string            `json:"api_key_prefix"`
+	RateLimitRps    uint32            `json:"rate_limit_rps"`
+	MaxConnections  uint32            `json:"max_connections"`
+	MaxMessageSize  uint64            `json:"max_message_size"`
+	RetentionDays   uint32            `json:"retention_days"`
+	Enabled         bool              `json:"enabled"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Validate checks if tenant configuration is valid
@@ -66,9 +81,9 @@ type AppConfig struct {
 
 // AppSettings represents complete application settings
 type AppSettings struct {
-	App     AppConfig      `json:"app"`
-	Server  ServerConfig   `json:"server"`
-	Tenants []TenantConfig `json:"tenants"`
+	App     AppConfig        `json:"app"`
+	Server  ServerConfig     `json:"server"`
+	Tenants []TenantConfig   `json:"tenants"`
 }
 
 // LoadFromFile loads AppSettings from JSON file with environment overrides
@@ -145,64 +160,43 @@ func (as *AppSettings) GetTenantByAPIKey(apiKey string) *TenantConfig {
 	return nil
 }
 
-// Priority represents message priority
-type Priority uint8
-
-const (
-	PriorityDeferred  Priority = 50
-	PriorityNormal    Priority = 100
-	PriorityHigh      Priority = 150
-	PriorityUrgent    Priority = 200
-	PriorityCritical  Priority = 255
-)
-
-// NotificationChannel represents delivery channels
-type NotificationChannel int
-
-const (
-	ChannelEmail     NotificationChannel = iota
-	ChannelWebSocket
-	ChannelPush
-	ChannelWebhook
-)
-
 // PushPlatform represents push notification platforms
 type PushPlatform int
 
 const (
-	PlatformFirebase PushPlatform = iota
-	PlatformAPNs
-	PlatformFCM
-	PlatformWebPush
+	Firebase PushPlatform = iota
+	APNs
+	FCM
+	WebPush
 )
 
 // Message represents a FastDataBroker message
 type Message struct {
-	TenantID       string
-	SenderID       string
-	RecipientIDs   []string
-	Subject        string
-	Content        []byte
-	Priority       Priority
-	TTLSeconds     *int64
-	Tags           map[string]string
-	RequireConfirm bool
+	TenantID         string
+	SenderID         string
+	RecipientIDs     []string
+	Subject          string
+	Content          []byte
+	Priority         Priority
+	TTLSeconds       *int64
+	Tags             map[string]string
+	RequireConfirm   bool
 }
 
 // DeliveryResult represents message delivery result
 type DeliveryResult struct {
-	MessageID         string
-	TenantID          string
-	Status            string
+	MessageID        string
+	TenantID         string
+	Status           string
 	DeliveredChannels int
-	Details           map[string]interface{}
+	Details          map[string]interface{}
 }
 
 // WebSocketClientInfo represents a WebSocket client connection
 type WebSocketClientInfo struct {
-	ClientID    string
-	UserID      string
-	TenantID    string
+	ClientID  string
+	UserID    string
+	TenantID  string
 	ConnectedAt time.Time
 }
 
@@ -321,11 +315,11 @@ func (c *Client) SendMessage(msg *Message) (*DeliveryResult, error) {
 	}
 
 	return &DeliveryResult{
-		MessageID:         generateID(),
-		TenantID:          c.TenantID,
-		Status:            "success",
+		MessageID:        generateID(),
+		TenantID:         c.TenantID,
+		Status:           "success",
 		DeliveredChannels: 1,
-		Details:           make(map[string]interface{}),
+		Details:          make(map[string]interface{}),
 	}, nil
 }
 
@@ -362,14 +356,42 @@ func (c *Client) RegisterWebhook(channel NotificationChannel, config *WebhookCon
 	return true
 }
 
-// GenerateAPIKey generates a new API key for the given client ID, scoped to the tenant prefix
+// GenerateAPIKey generates API key for a client (tenant-aware)
 func (c *Client) GenerateAPIKey(clientID string) (string, error) {
-	if c.Settings == nil {
-		return "", fmt.Errorf("settings not loaded")
+	if clientID == "" {
+		return "", fmt.Errorf("ClientID cannot be empty")
 	}
+
 	tenant := c.Settings.GetTenant(c.TenantID)
 	if tenant == nil {
 		return "", fmt.Errorf("tenant '%s' not found", c.TenantID)
 	}
-	return tenant.APIKeyPrefix + clientID + "-" + generateID(), nil
+
+	return tenant.APIKeyPrefix + generateID()[:16], nil
+}
+
+// GetTenantConfig returns current tenant configuration
+func (c *Client) GetTenantConfig() *TenantConfig {
+	return c.Settings.GetTenant(c.TenantID)
+}
+
+// Disconnect closes the connection
+func (c *Client) Disconnect() {
+	c.connected = false
+	fmt.Printf("[TENANT: %s] Disconnected\n", c.TenantID)
+}
+
+// CreateClient helper function to load config and create client
+func CreateClient(configPath string, tenantID string, apiKey string, environment string) (*Client, error) {
+	settings, err := LoadFromFile(configPath, environment)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClientFromSettings(settings, tenantID, apiKey)
+}
+
+// Helper function to generate IDs
+func generateID() string {
+	return fmt.Sprintf("%d%d", time.Now().UnixNano(), time.Now().Nanosecond())
 }

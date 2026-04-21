@@ -560,7 +560,7 @@ class TestBatchOperations:
         messages = [
             Message(
                 sender_id="app1",
-                recipient_ids=[f"user{j}"],
+                recipient_ids=[f"user{i}"],
                 subject=f"Message {i}",
                 content=f"Content {i}".encode()
             )
@@ -1124,7 +1124,7 @@ class TestIntegration:
         messages = [
             Message(
                 sender_id="app1",
-                recipient_ids=[f"user{j % 100}"],
+                recipient_ids=[f"user{i % 100}"],
                 subject=f"Batch message {i}",
                 content=f"Content {i}".encode()
             )

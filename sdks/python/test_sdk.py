@@ -362,8 +362,7 @@ def test9_configuration_validation():
 # ============================================================================
 
 def run_all_tests():
-    global tests_passed, tests_failed
-    
+
     print('\n' + '='*70)
     print('FastDataBroker Python SDK - Test Suite')
     print('='*70 + '\n')
