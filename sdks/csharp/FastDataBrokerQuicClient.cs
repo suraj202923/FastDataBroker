@@ -131,7 +131,7 @@ namespace FastDataBroker.SDK
 
         public void Dispose()
         {
-            Disconnect().Wait();
+            Disconnect();
             _cancellationTokenSource?.Dispose();
             _reader?.Dispose();
             _writer?.Dispose();
