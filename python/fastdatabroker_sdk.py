@@ -5,13 +5,14 @@ Provides simple async/sync interfaces for message queuing and notification deliv
 
 import asyncio
 from typing import List, Dict, Optional, Any
-from dataclasses import dataclass
-from enum import Enum
+from dataclasses import dataclass, field
+from enum import Enum, IntEnum
+import uuid
 
 __version__ = "0.1.13"
 
 
-class Priority(Enum):
+class Priority(IntEnum):
     """Message priority levels"""
     DEFERRED = 50
     NORMAL = 100
@@ -29,6 +30,100 @@ class NotificationChannel(Enum):
 
 
 @dataclass
+class TenantConfig:
+    """Tenant-specific configuration for multi-tenant deployments."""
+    tenant_id: str
+    tenant_name: str
+    api_key_prefix: str
+    rate_limit_rps: int
+    max_connections: int
+    max_message_size: int = 1048576
+    retention_days: int = 30
+    enabled: bool = True
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def validate(self) -> None:
+        if not self.tenant_id:
+            raise ValueError("tenant_id cannot be empty")
+        if not self.api_key_prefix or not self.api_key_prefix.endswith("_"):
+            raise ValueError("api_key_prefix must end with '_' ")
+        if self.rate_limit_rps <= 0:
+            raise ValueError("rate_limit_rps must be greater than 0")
+        if self.max_connections <= 0:
+            raise ValueError("max_connections must be greater than 0")
+
+
+class AppSettings:
+    """Container for tenant settings and lookup helpers."""
+
+    def __init__(self) -> None:
+        self.tenants: List[TenantConfig] = []
+
+    def add_tenant(self, tenant: TenantConfig) -> None:
+        self.tenants.append(tenant)
+
+    def get_tenant(self, tenant_id: str) -> Optional[TenantConfig]:
+        for tenant in self.tenants:
+            if tenant.tenant_id == tenant_id:
+                return tenant
+        return None
+
+    def get_tenant_by_api_key(self, api_key: str) -> Optional[TenantConfig]:
+        for tenant in self.tenants:
+            if api_key.startswith(tenant.api_key_prefix):
+                return tenant
+        return None
+
+
+class Client:
+    """Simple multi-tenant client facade for compatibility tests."""
+
+    def __init__(self, tenant_id: str, api_key: str, host: str = "localhost", port: int = 6379):
+        if not tenant_id:
+            raise ValueError("tenant_id cannot be empty")
+        if not api_key:
+            raise ValueError("api_key cannot be empty")
+        self.tenant_id = tenant_id
+        self.api_key = api_key
+        self.host = host
+        self.port = port
+        self._connected = False
+        self._settings: Optional[AppSettings] = None
+
+    @classmethod
+    def from_settings(cls, settings: AppSettings, tenant_id: str, api_key: str) -> "Client":
+        tenant = settings.get_tenant(tenant_id)
+        if tenant is None:
+            raise ValueError(f"tenant '{tenant_id}' not found")
+        if not api_key.startswith(tenant.api_key_prefix):
+            raise ValueError("api_key does not match tenant prefix")
+        client = cls(tenant_id=tenant_id, api_key=api_key)
+        client._settings = settings
+        return client
+
+    def is_connected(self) -> bool:
+        return self._connected
+
+    def connect(self) -> bool:
+        self._connected = True
+        return True
+
+    def disconnect(self) -> None:
+        self._connected = False
+
+    def get_tenant_config(self) -> Optional[TenantConfig]:
+        if self._settings is None:
+            return None
+        return self._settings.get_tenant(self.tenant_id)
+
+    def generate_api_key(self, client_id: str) -> str:
+        tenant = self.get_tenant_config()
+        if tenant is None:
+            raise ValueError(f"tenant '{self.tenant_id}' not found")
+        return f"{tenant.api_key_prefix}{client_id}_{uuid.uuid4().hex[:12]}"
+
+
+@dataclass
 class Message:
     """FastDataBroker message envelope"""
     sender_id: str
@@ -37,7 +132,8 @@ class Message:
     content: bytes
     priority: Priority = Priority.NORMAL
     ttl_seconds: Optional[int] = None
-    tags: Optional[Dict[str, str]] = None
+    tags: Dict[str, str] = field(default_factory=dict)
+    tenant_id: Optional[str] = None
 
 
 @dataclass
