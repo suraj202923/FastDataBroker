@@ -33,44 +33,44 @@ const (
 
 // TenantConfig holds tenant-specific configuration
 type TenantConfig struct {
-	TenantID        string
-	PSKSecret       string
-	ClientID        string
-	APIKey          string
-	Role            TenantRole
-	RateLimitRPS    int
-	MaxConnections  int
-	CustomHeaders   map[string]string
+	TenantID       string
+	PSKSecret      string
+	ClientID       string
+	APIKey         string
+	Role           TenantRole
+	RateLimitRPS   int
+	MaxConnections int
+	CustomHeaders  map[string]string
 }
 
 // QuicHandshakeParams holds tenant-specific QUIC handshake parameters
 type QuicHandshakeParams struct {
-	TenantID            string
-	ClientID            string
-	TimestampMS         int64
-	RandomNonce         string
-	PSKToken            string
-	InitialMaxStreams   int
-	IdleTimeoutMS       int
-	SessionToken        string
-	ConnectionID        string
+	TenantID          string
+	ClientID          string
+	TimestampMS       int64
+	RandomNonce       string
+	PSKToken          string
+	InitialMaxStreams int
+	IdleTimeoutMS     int
+	SessionToken      string
+	ConnectionID      string
 }
 
 // TenantQuicClient represents a QUIC client with tenant-specific handshake
 type TenantQuicClient struct {
-	host                  string
-	port                  int
-	tenantConfig          *TenantConfig
-	connectionState       ConnectionState
-	isAuthenticated       bool
-	handshakeStartTime    int64
-	handshakeDurationMS   int64
-	connectionStart       int64
-	stats                 map[string]int64
-	messageHandlers       map[string]func(*Message)
-	connectionID          string
-	sessionToken          string
-	mu                    sync.RWMutex
+	host                string
+	port                int
+	tenantConfig        *TenantConfig
+	connectionState     ConnectionState
+	isAuthenticated     bool
+	handshakeStartTime  int64
+	handshakeDurationMS int64
+	connectionStart     int64
+	stats               map[string]int64
+	messageHandlers     map[string]func(*Message)
+	connectionID        string
+	sessionToken        string
+	mu                  sync.RWMutex
 }
 
 // NewTenantQuicClient creates a new QUIC client with tenant configuration
@@ -158,11 +158,7 @@ func (c *TenantQuicClient) validateTenantInHandshake(params *QuicHandshakeParams
 
 	// Verify timestamp is recent (within 60 seconds)
 	currentTime := time.Now().UnixMilli()
-	if currentTime-params.TimestampMS > 60000 {
-		return false
-	}
-
-	return true
+	return currentTime-params.TimestampMS <= 60000
 }
 
 // generateSessionToken generates a post-handshake session token
@@ -244,7 +240,7 @@ func (c *TenantQuicClient) SendMessage(ctx context.Context, msg *Message) (*Deli
 
 	// Simulate message sending
 	messageID := fmt.Sprintf("msg_%d_%d", time.Now().UnixMilli(), rand.Intn(10000))
-	latency := float64((time.Now().UnixNano() % 50000000) + 5000000) / 1000000
+	latency := float64((time.Now().UnixNano()%50000000)+5000000) / 1000000
 
 	c.mu.Lock()
 	c.stats["messages_sent"]++
@@ -285,14 +281,14 @@ func (c *TenantQuicClient) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"is_connected":         c.connectionState == StateEstablished && c.isAuthenticated,
-		"messages_sent":        c.stats["messages_sent"],
-		"messages_received":    c.stats["messages_received"],
-		"uptime_seconds":       uptime,
+		"is_connected":          c.connectionState == StateEstablished && c.isAuthenticated,
+		"messages_sent":         c.stats["messages_sent"],
+		"messages_received":     c.stats["messages_received"],
+		"uptime_seconds":        uptime,
 		"handshake_duration_ms": c.handshakeDurationMS,
-		"tenant_id":            c.tenantConfig.TenantID,
-		"connection_id":        c.connectionID,
-		"session_token":        c.sessionToken[:16] + "...",
+		"tenant_id":             c.tenantConfig.TenantID,
+		"connection_id":         c.connectionID,
+		"session_token":         c.sessionToken[:16] + "...",
 	}
 }
 

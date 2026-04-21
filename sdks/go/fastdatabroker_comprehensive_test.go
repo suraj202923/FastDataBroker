@@ -36,10 +36,10 @@ const (
 )
 
 type TestResult struct {
-	MessageID        string
-	Status           string
+	MessageID         string
+	Status            string
 	DeliveredChannels int
-	Details         map[string]string
+	Details           map[string]string
 }
 
 // ============================================================================
@@ -903,8 +903,8 @@ func (c *FastDataBrokerClient) SendMessage(msg *TestMessage) *TestResult {
 	}
 
 	return &TestResult{
-		MessageID:        fmt.Sprintf("msg-%d", time.Now().UnixNano()),
-		Status:           "success",
+		MessageID:         fmt.Sprintf("msg-%d", time.Now().UnixNano()),
+		Status:            "success",
 		DeliveredChannels: 4,
 		Details: map[string]string{
 			"email":     "sent",

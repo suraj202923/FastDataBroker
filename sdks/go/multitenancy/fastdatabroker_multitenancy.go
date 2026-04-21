@@ -3,7 +3,6 @@ package multitenancy
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,15 +34,15 @@ const (
 
 // TenantConfig represents tenant-specific configuration
 type TenantConfig struct {
-	TenantID        string            `json:"tenant_id"`
-	TenantName      string            `json:"tenant_name"`
-	APIKeyPrefix    string            `json:"api_key_prefix"`
-	RateLimitRps    uint32            `json:"rate_limit_rps"`
-	MaxConnections  uint32            `json:"max_connections"`
-	MaxMessageSize  uint64            `json:"max_message_size"`
-	RetentionDays   uint32            `json:"retention_days"`
-	Enabled         bool              `json:"enabled"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	TenantID       string                 `json:"tenant_id"`
+	TenantName     string                 `json:"tenant_name"`
+	APIKeyPrefix   string                 `json:"api_key_prefix"`
+	RateLimitRps   uint32                 `json:"rate_limit_rps"`
+	MaxConnections uint32                 `json:"max_connections"`
+	MaxMessageSize uint64                 `json:"max_message_size"`
+	RetentionDays  uint32                 `json:"retention_days"`
+	Enabled        bool                   `json:"enabled"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Validate checks if tenant configuration is valid
@@ -81,9 +80,9 @@ type AppConfig struct {
 
 // AppSettings represents complete application settings
 type AppSettings struct {
-	App     AppConfig        `json:"app"`
-	Server  ServerConfig     `json:"server"`
-	Tenants []TenantConfig   `json:"tenants"`
+	App     AppConfig      `json:"app"`
+	Server  ServerConfig   `json:"server"`
+	Tenants []TenantConfig `json:"tenants"`
 }
 
 // LoadFromFile loads AppSettings from JSON file with environment overrides
@@ -92,7 +91,7 @@ func LoadFromFile(filePath string, environment string) (*AppSettings, error) {
 		return nil, fmt.Errorf("configuration file not found: %s", filePath)
 	}
 
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -109,7 +108,7 @@ func LoadFromFile(filePath string, environment string) (*AppSettings, error) {
 	)
 
 	if _, err := os.Stat(envFile); err == nil {
-		envData, err := ioutil.ReadFile(envFile)
+		envData, err := os.ReadFile(envFile)
 		if err == nil {
 			var envSettings AppSettings
 			if err := json.Unmarshal(envData, &envSettings); err == nil {
@@ -172,31 +171,31 @@ const (
 
 // Message represents a FastDataBroker message
 type Message struct {
-	TenantID         string
-	SenderID         string
-	RecipientIDs     []string
-	Subject          string
-	Content          []byte
-	Priority         Priority
-	TTLSeconds       *int64
-	Tags             map[string]string
-	RequireConfirm   bool
+	TenantID       string
+	SenderID       string
+	RecipientIDs   []string
+	Subject        string
+	Content        []byte
+	Priority       Priority
+	TTLSeconds     *int64
+	Tags           map[string]string
+	RequireConfirm bool
 }
 
 // DeliveryResult represents message delivery result
 type DeliveryResult struct {
-	MessageID        string
-	TenantID         string
-	Status           string
+	MessageID         string
+	TenantID          string
+	Status            string
 	DeliveredChannels int
-	Details          map[string]interface{}
+	Details           map[string]interface{}
 }
 
 // WebSocketClientInfo represents a WebSocket client connection
 type WebSocketClientInfo struct {
-	ClientID  string
-	UserID    string
-	TenantID  string
+	ClientID    string
+	UserID      string
+	TenantID    string
 	ConnectedAt time.Time
 }
 
@@ -315,11 +314,11 @@ func (c *Client) SendMessage(msg *Message) (*DeliveryResult, error) {
 	}
 
 	return &DeliveryResult{
-		MessageID:        generateID(),
-		TenantID:         c.TenantID,
-		Status:           "success",
+		MessageID:         generateID(),
+		TenantID:          c.TenantID,
+		Status:            "success",
 		DeliveredChannels: 1,
-		Details:          make(map[string]interface{}),
+		Details:           make(map[string]interface{}),
 	}, nil
 }
 

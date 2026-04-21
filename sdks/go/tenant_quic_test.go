@@ -85,7 +85,9 @@ func TestTenantQuicHandshake(t *testing.T) {
 		t.Errorf("Expected handshake_duration_ms > 0, got %d", client.handshakeDurationMS)
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		t.Errorf("Disconnect failed: %v", err)
+	}
 }
 
 // TestTenantMessageIsolation tests tenant message isolation
@@ -170,8 +172,12 @@ func TestTenantMessageIsolation(t *testing.T) {
 		t.Errorf("Expected different connection IDs for different tenants")
 	}
 
-	client1.Disconnect()
-	client2.Disconnect()
+	if err := client1.Disconnect(); err != nil {
+		t.Errorf("Client1 disconnect failed: %v", err)
+	}
+	if err := client2.Disconnect(); err != nil {
+		t.Errorf("Client2 disconnect failed: %v", err)
+	}
 }
 
 // TestConcurrentTenantConnections tests concurrent connections from multiple tenants
@@ -234,7 +240,9 @@ func TestConcurrentTenantConnections(t *testing.T) {
 
 	// Disconnect all clients
 	for _, client := range clients {
-		client.Disconnect()
+		if err := client.Disconnect(); err != nil {
+			t.Errorf("Disconnect failed: %v", err)
+		}
 	}
 }
 
@@ -286,7 +294,9 @@ func TestHandshakeMetrics(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	client.Connect(ctx)
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Connect failed: %v", err)
+	}
 
 	stats := client.GetStats()
 
@@ -298,7 +308,9 @@ func TestHandshakeMetrics(t *testing.T) {
 		t.Errorf("Expected handshake_duration_ms > 0, got %v", handshakeDuration)
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		t.Errorf("Disconnect failed: %v", err)
+	}
 }
 
 // TestConnectionStateTransitions tests connection state machine
@@ -322,7 +334,9 @@ func TestConnectionStateTransitions(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	client.Connect(ctx)
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Connect failed: %v", err)
+	}
 
 	if client.connectionState != StateEstablished {
 		t.Errorf("Expected state=established after connect, got %s", client.connectionState)
@@ -334,7 +348,9 @@ func TestConnectionStateTransitions(t *testing.T) {
 	}
 
 	// After disconnect
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		t.Errorf("Disconnect failed: %v", err)
+	}
 
 	if client.connectionState != StateClosed {
 		t.Errorf("Expected state=closed after disconnect, got %s", client.connectionState)
@@ -369,7 +385,9 @@ func TestRateLimitingConfig(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	client.Connect(ctx)
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Connect failed: %v", err)
+	}
 
 	stats := client.GetStats()
 
@@ -377,7 +395,9 @@ func TestRateLimitingConfig(t *testing.T) {
 		t.Errorf("Expected is_connected=true")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		t.Errorf("Disconnect failed: %v", err)
+	}
 }
 
 // TestCustomHeaders tests tenant custom headers in configuration

@@ -27,12 +27,13 @@ jobs:
         go-version: ['1.21', '1.22']
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
+        cache-dependency-path: sdks/go/go.sum
     
     - name: Display Go version
       run: go version
@@ -72,12 +73,13 @@ jobs:
     name: "✅ Code Quality Check (Go)"
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Go 1.22
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.22
+        cache-dependency-path: sdks/go/go.sum
     
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v3
@@ -100,9 +102,13 @@ jobs:
       working-directory: sdks/go
       run: |
         go mod tidy
-        if [ -n "$(git diff go.mod go.sum)" ]; then
+        DIFF_FILES="go.mod"
+        if [ -f go.sum ]; then
+          DIFF_FILES="$DIFF_FILES go.sum"
+        fi
+        if [ -n "$(git diff -- $DIFF_FILES)" ]; then
           echo "❌ go.mod or go.sum is not tidy. Please run 'go mod tidy'"
-          git diff go.mod go.sum
+          git diff -- $DIFF_FILES
           exit 1
         fi
         echo "✅ go.mod and go.sum are tidy"
@@ -119,12 +125,13 @@ jobs:
     name: "📦 Build Artifacts"
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Go 1.22
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.22
+        cache-dependency-path: sdks/go/go.sum
     
     - name: Build documentation
       working-directory: sdks/go
@@ -156,12 +163,13 @@ jobs:
       contents: write
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Go 1.22
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.22
+        cache-dependency-path: sdks/go/go.sum
     
     - name: Get Go module info
       working-directory: sdks/go

@@ -48,34 +48,34 @@ type Message struct {
 
 // DeliveryResult message delivery result
 type DeliveryResult struct {
-	MessageID  string    `json:"message_id"`
-	Status     string    `json:"status"`
-	LatencyMs  float64   `json:"latency_ms"`
-	Timestamp  int64     `json:"timestamp"`
+	MessageID string  `json:"message_id"`
+	Status    string  `json:"status"`
+	LatencyMs float64 `json:"latency_ms"`
+	Timestamp int64   `json:"timestamp"`
 }
 
 // ConnectionStats connection statistics
 type ConnectionStats struct {
-	IsConnected    bool  `json:"is_connected"`
-	MessagesSent   int64 `json:"messages_sent"`
+	IsConnected      bool  `json:"is_connected"`
+	MessagesSent     int64 `json:"messages_sent"`
 	MessagesReceived int64 `json:"messages_received"`
 	ConnectionTimeMs int64 `json:"connection_time_ms"`
-	UptimeSeconds  int64 `json:"uptime_seconds"`
-	LastMessageTime int64 `json:"last_message_time"`
+	UptimeSeconds    int64 `json:"uptime_seconds"`
+	LastMessageTime  int64 `json:"last_message_time"`
 }
 
 // QuicConnectionConfig QUIC connection configuration
 type QuicConnectionConfig struct {
-	Host            string
-	Port            int
-	TenantID        string
-	ClientID        string
-	PSKSecret       string
-	Secrets         string
-	IdleTimeoutMs   int
-	MaxStreams      int
-	AutoReconnect   bool
-	ReadTimeoutMs   int
+	Host          string
+	Port          int
+	TenantID      string
+	ClientID      string
+	PSKSecret     string
+	Secrets       string
+	IdleTimeoutMs int
+	MaxStreams    int
+	AutoReconnect bool
+	ReadTimeoutMs int
 }
 
 // ============================================================================
@@ -84,25 +84,25 @@ type QuicConnectionConfig struct {
 
 // FastDataBrokerQuicClient QUIC client with PSK authentication
 type FastDataBrokerQuicClient struct {
-	config           *QuicConnectionConfig
-	conn             net.Conn
-	connected        bool
-	authenticated    bool
-	state            ConnectionState
-	messageHandlers  map[string]func(interface{})
-	handlersMutex    sync.RWMutex
-	connectionStart  time.Time
-	receiveCancel    chan bool
-	wg               sync.WaitGroup
-	stats            Stats
-	statsMutex       sync.RWMutex
+	config          *QuicConnectionConfig
+	conn            net.Conn
+	connected       bool
+	authenticated   bool
+	state           ConnectionState
+	messageHandlers map[string]func(interface{})
+	handlersMutex   sync.RWMutex
+	connectionStart time.Time
+	receiveCancel   chan bool
+	wg              sync.WaitGroup
+	stats           Stats
+	statsMutex      sync.RWMutex
 }
 
 // Stats internal statistics
 type Stats struct {
-	MessagesSent    int64
+	MessagesSent     int64
 	MessagesReceived int64
-	LastMessageTime int64
+	LastMessageTime  int64
 }
 
 // NewFastDataBrokerQuicClient create new QUIC client
@@ -178,10 +178,10 @@ func (c *FastDataBrokerQuicClient) sendPskHandshake() error {
 	identity, secretHash := c.generatePskIdentity()
 
 	handshake := map[string]interface{}{
-		"type":         "psk_auth",
-		"identity":     identity,
-		"secret_hash":  secretHash,
-		"timestamp":    time.Now().UnixMilli(),
+		"type":        "psk_auth",
+		"identity":    identity,
+		"secret_hash": secretHash,
+		"timestamp":   time.Now().UnixMilli(),
 	}
 
 	data, err := json.Marshal(handshake)
@@ -205,7 +205,12 @@ func (c *FastDataBrokerQuicClient) receiveLoop() {
 
 	for c.connected {
 		// Set read deadline
-		c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.config.ReadTimeoutMs) * time.Millisecond))
+		if err := c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.config.ReadTimeoutMs) * time.Millisecond)); err != nil {
+			if c.connected {
+				fmt.Printf("SetReadDeadline error: %v\n", err)
+			}
+			break
+		}
 
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -289,7 +294,9 @@ func (c *FastDataBrokerQuicClient) SendMessage(msg *Message) (*DeliveryResult, e
 	}
 
 	// Set write deadline
-	c.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	if err := c.conn.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		return nil, fmt.Errorf("failed to set write deadline: %w", err)
+	}
 
 	_, err = c.conn.Write(append(data, '\n'))
 	if err != nil {
@@ -549,5 +556,7 @@ func main() {
 	time.Sleep(10 * time.Second)
 
 	// Disconnect
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		fmt.Printf("✗ Failed to disconnect cleanly: %v\n", err)
+	}
 }

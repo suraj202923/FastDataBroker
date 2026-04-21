@@ -153,13 +153,17 @@ func test1BasicConnection() error {
 		return fmt.Errorf("should be connected")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test2SendMessage() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	result, err := client.SendMessage(&Message{
 		Topic:    "test.topic",
@@ -183,13 +187,17 @@ func test2SendMessage() error {
 		return fmt.Errorf("latency should be non-negative")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test3MessageHandlers() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	handler := func(msg interface{}) {}
 	client.OnMessage("test.topic", handler)
@@ -204,20 +212,26 @@ func test3MessageHandlers() error {
 		return fmt.Errorf("handler should be unregistered")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test4ConnectionStatistics() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	for i := 0; i < 5; i++ {
-		client.SendMessage(&Message{
+		if _, err := client.SendMessage(&Message{
 			Topic:    "test.topic",
 			Payload:  map[string]int{"index": i},
 			Priority: 5,
-		})
+		}); err != nil {
+			return err
+		}
 	}
 
 	time.Sleep(50 * time.Millisecond)
@@ -236,13 +250,17 @@ func test4ConnectionStatistics() error {
 		return fmt.Errorf("uptime should be non-negative")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test5ConcurrentMessages() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	results := make([]*DeliveryResult, 10)
 	for i := 0; i < 10; i++ {
@@ -271,13 +289,17 @@ func test5ConcurrentMessages() error {
 		return fmt.Errorf("expected 10 messages sent, got %d", client.stats["messages_sent"])
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test6PriorityLevels() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	priorities := []int{1, 5, 10, 20}
 
@@ -297,13 +319,17 @@ func test6PriorityLevels() error {
 		}
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func test7LatencyMeasurement() error {
 	client := NewFastDataBrokerQuicClient("localhost", 6000, "test-tenant", "test-client", "test-secret")
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 
 	latencies := make([]float64, 0)
 	for i := 0; i < 50; i++ {
@@ -339,7 +365,9 @@ func test7LatencyMeasurement() error {
 
 	fmt.Printf("   Average latency: %.2fms, Max: %.2fms\n", avgLatency, maxLatency)
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -360,7 +388,9 @@ func test8ErrorHandling() error {
 		return fmt.Errorf("should throw 'not connected' error, got: %v", err)
 	}
 
-	client.Connect()
+	if err := client.Connect(); err != nil {
+		return err
+	}
 	result, err := client.SendMessage(&Message{Topic: "test", Payload: map[string]string{}, Priority: 5})
 
 	if err != nil {
@@ -371,7 +401,9 @@ func test8ErrorHandling() error {
 		return fmt.Errorf("should send successfully after connect")
 	}
 
-	client.Disconnect()
+	if err := client.Disconnect(); err != nil {
+		return err
+	}
 	return nil
 }
 

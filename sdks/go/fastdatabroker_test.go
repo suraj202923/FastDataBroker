@@ -347,7 +347,7 @@ func TestMultipleClients_Basic(t *testing.T) {
 	}
 
 	for i, client := range clients {
-		if client == nil || client.port != 6000+i {
+		if client.port != 6000+i {
 			t.Errorf("Client %d is invalid", i)
 		}
 	}
