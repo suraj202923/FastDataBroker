@@ -10,13 +10,13 @@ export enum ConnectionState {
   HANDSHAKE = 'handshake',
   ESTABLISHED = 'established',
   CLOSING = 'closing',
-  CLOSED = 'closed'
+  CLOSED = 'closed',
 }
 
 export enum TenantRole {
   ADMIN = 'admin',
   USER = 'user',
-  SERVICE = 'service'
+  SERVICE = 'service',
 }
 
 export interface Message {
@@ -86,7 +86,7 @@ export class TenantQuicClient {
     messages_sent: 0,
     messages_received: 0,
     last_message_time: 0,
-    handshake_attempts: 0
+    handshake_attempts: 0,
   };
   private messageHandlers: Map<string, (message: Message) => void> = new Map();
   private connectionId: string = '';
@@ -99,7 +99,7 @@ export class TenantQuicClient {
       role: TenantRole.USER,
       rateLimitRPS: 1000,
       maxConnections: 100,
-      ...tenantConfig
+      ...tenantConfig,
     };
   }
 
@@ -135,7 +135,7 @@ export class TenantQuicClient {
       randomNonce,
       pskToken,
       initialMaxStreams: this.tenantConfig.maxConnections || 100,
-      idleTimeoutMs: 30000
+      idleTimeoutMs: 30000,
     };
   }
 
@@ -213,7 +213,9 @@ export class TenantQuicClient {
     }
 
     this.stats.handshake_attempts++;
-    console.log(`Initiating tenant-specific QUIC handshake for tenant: ${this.tenantConfig.tenantId}`);
+    console.log(
+      `Initiating tenant-specific QUIC handshake for tenant: ${this.tenantConfig.tenantId}`
+    );
 
     // Perform tenant QUIC handshake
     const handshakeSuccess = await this.performTenantQuicHandshake();
@@ -251,7 +253,7 @@ export class TenantQuicClient {
     // Add tenant context
     const messageWithTenant: Message = {
       ...message,
-      tenantId: this.tenantConfig.tenantId
+      tenantId: this.tenantConfig.tenantId,
     };
 
     // Simulate message sending
@@ -266,7 +268,7 @@ export class TenantQuicClient {
       status: 'success',
       latencyMs: latency,
       timestamp: Date.now(),
-      tenantId: messageWithTenant.tenantId
+      tenantId: messageWithTenant.tenantId,
     };
   }
 
@@ -288,9 +290,8 @@ export class TenantQuicClient {
    * Get current connection statistics
    */
   getStats(): ConnectionStats {
-    const uptimeMs = this.connectionState === ConnectionState.ESTABLISHED 
-      ? Date.now() - this.connectionStart 
-      : 0;
+    const uptimeMs =
+      this.connectionState === ConnectionState.ESTABLISHED ? Date.now() - this.connectionStart : 0;
 
     return {
       isConnected: this.connectionState === ConnectionState.ESTABLISHED && this.isAuthenticated,
@@ -299,7 +300,7 @@ export class TenantQuicClient {
       connectionTimeMs: uptimeMs,
       uptimeSeconds: Math.floor(uptimeMs / 1000),
       lastMessageTime: this.stats.last_message_time,
-      handshakeDurationMs: this.handshakeDurationMs
+      handshakeDurationMs: this.handshakeDurationMs,
     };
   }
 
@@ -318,7 +319,9 @@ export class TenantQuicClient {
       this.connectionState = ConnectionState.CLOSING;
       this.connectionState = ConnectionState.CLOSED;
       this.isAuthenticated = false;
-      console.log(`✓ Disconnected from ${this.host}:${this.port} (Tenant: ${this.tenantConfig.tenantId})`);
+      console.log(
+        `✓ Disconnected from ${this.host}:${this.port} (Tenant: ${this.tenantConfig.tenantId})`
+      );
     }
   }
 
